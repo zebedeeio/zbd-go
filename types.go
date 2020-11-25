@@ -2,11 +2,13 @@ package zebedee
 
 import "time"
 
+// The Wallet Object: https://documentation.zebedee.io/docs/wallet-main/
 type Wallet struct {
 	Unit    string `json:"unit"`
 	Balance string `json:"balance"`
 }
 
+// The Charge Object: https://documentation.zebedee.io/docs/charges-main
 type Charge struct {
 	ExpiresIn   time.Duration `json:"expiresIn"`
 	Unit        string        `json:"unit"`
@@ -25,6 +27,7 @@ type Charge struct {
 	} `json:"invoice"`
 }
 
+// The Payment Object: https://documentation.zebedee.io/docs/payments-main
 type Payment struct {
 	Fee         string    `json:"fee"`
 	Unit        string    `json:"unit"`
