@@ -38,6 +38,10 @@ func (c *Client) MakeRequest(
 	if err != nil {
 		return err
 	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("apikey", c.APIKey)
+
 	resp, err := c.HttpClient.Do(req)
 	if err != nil {
 		return err
