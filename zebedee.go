@@ -83,6 +83,29 @@ func (c *Client) GetCharge(chargeID string) (*Charge, error) {
 	return &charge, err
 }
 
+// Create Withdrawal Request: https://api-reference.zebedee.io/#60cee894-009f-40dc-9cba-e9aec5ce8aa9
+//
+// Takes an WithdrawalRequest object containing only
+// {expiresIn, Amount, Description, InternalID, CallbackURL}
+func (c *Client) WithdrawalRequest(params *WithdrawalRequest) (*WithdrawalRequest, error) {
+	err := c.MakeRequest("POST", "/withdrawal-requests", params, params)
+	return params, err
+}
+
+// Get All Withdrawal Requests: https://api-reference.zebedee.io/#bc59c1da-4d5a-49c6-937f-f95d71c940c6
+func (c *Client) ListWithdrawalRequests() ([]WithdrawalRequest, error) {
+	var wr []WithdrawalRequest
+	err := c.MakeRequest("GET", "/withdrawal-requests", nil, &wr)
+	return wr, err
+}
+
+// Get Withdrawal Request Details: https://api-reference.zebedee.io/#12aea552-0b8d-4562-a84b-a890d4f17a32
+func (c *Client) GetWithdrawalRequest(wrequestID string) (*WithdrawalRequest, error) {
+	var wr WithdrawalRequest
+	err := c.MakeRequest("GET", "/withdrawal-requests/"+wrequestID, nil, &wr)
+	return &wr, err
+}
+
 // Pay Invoice: https://api-reference.zebedee.io/#04dace34-06f5-4c2f-9215-5870205098d5
 //
 // Takes a Payment object containing only {Description, internalID, Invoice}
