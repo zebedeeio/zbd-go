@@ -13,7 +13,7 @@ func main () {
 		InternalID:  "aninternalchargeid",
 		Amount:      "10000",
 		Description: "My charge description",
-		ExpiresIn:   time.Minute * 30,
+		ExpiresIn:   int64((time.Minute * 30).Seconds()),
 		CallbackURL: "https://mysite.example.com/callback/zebedee",
 	})
 	fmt.Printf("invoice to be paid: %s\n", charge.Invoice.Request)
