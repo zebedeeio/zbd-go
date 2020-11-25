@@ -1,12 +1,14 @@
-## Usage
-
-```golang
 package main
 
-import zebedee "github.com/zebedeeio/zebedee-go"
+import (
+	"fmt"
+	"time"
 
-func main () {
-    zbd := zebedee.New(APIKEY)
+	zebedee "github.com/zebedeeio/zebedee-go"
+)
+
+func main() {
+	zbd := zebedee.New("")
 
 	// generate a charge
 	charge, _ := zbd.Charge(&zebedee.Charge{
@@ -37,4 +39,3 @@ func main () {
 	wallet, _ := zbd.Wallet()
 	fmt.Printf("your balance is %s %s\n", wallet.Balance, wallet.Unit)
 }
-```
