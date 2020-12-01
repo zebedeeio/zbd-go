@@ -6,7 +6,7 @@ package main
 import zebedee "github.com/zebedeeio/zebedee-go"
 
 func main () {
-    zbd := zebedee.New(APIKEY)
+	zbd := zebedee.New(APIKEY)
 
 	// generate a charge
 	charge, _ := zbd.Charge(&zebedee.Charge{

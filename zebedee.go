@@ -3,6 +3,7 @@ package zebedee
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -21,6 +22,12 @@ func New(apikey string) *Client {
 		APIKey:     apikey,
 		HttpClient: &http.Client{},
 	}
+}
+
+type Response struct {
+	Success *bool           `json:"success"`
+	Message string          `json:"message"`
+	Data    json.RawMessage `json:"data"`
 }
 
 func (c *Client) MakeRequest(
@@ -48,13 +55,31 @@ func (c *Client) MakeRequest(
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode >= 300 {
-		body, _ := ioutil.ReadAll(resp.Body)
-		return fmt.Errorf("%s%s returned an error: '%s'",
-			c.BaseURL, path, string(body))
+	responseBody, _ := ioutil.ReadAll(resp.Body)
+
+	var baseResponse Response
+	err = json.Unmarshal(responseBody, &baseResponse)
+	if err != nil {
+		return fmt.Errorf("fail to decode JSON from %s: %s", path, err.Error())
 	}
 
-	return json.NewDecoder(resp.Body).Decode(response)
+	if resp.StatusCode >= 300 {
+		// the API returned a structured error
+		if baseResponse.Message != "" {
+			return errors.New(baseResponse.Message)
+		}
+
+		// an unexpected failure
+		return fmt.Errorf("%s returned an error (%d): '%s'",
+			path, resp.StatusCode, string(responseBody))
+	}
+
+	err = json.Unmarshal(baseResponse.Data, &response)
+	if err != nil {
+		return fmt.Errorf("Error unmarshaling field \"data\" from API response: %w", err)
+	}
+
+	return nil
 }
 
 func (c *Client) Wallet() (*Wallet, error) {
@@ -74,7 +99,7 @@ func (c *Client) Charge(params *Charge) (*Charge, error) {
 }
 
 // Get All Charges: https://api-reference.zebedee.io/#cdb9c0d1-76e5-4949-9bb8-e8a52d6aaed3
-func (c *Client) ListCharges(params *Charge) ([]Charge, error) {
+func (c *Client) ListCharges() ([]Charge, error) {
 	var charges []Charge
 	err := c.MakeRequest("GET", "/charges", nil, &charges)
 	return charges, err
@@ -112,15 +137,15 @@ func (c *Client) GetWithdrawalRequest(wrequestID string) (*WithdrawalRequest, er
 
 // Pay Invoice: https://api-reference.zebedee.io/#04dace34-06f5-4c2f-9215-5870205098d5
 //
-// Takes a Payment object containing only {Description, internalID, Invoice}
+// Takes a Payment object containing only {Description, InternalID, Invoice}
 // and overwrites that with the response.
 func (c *Client) Pay(params *Payment) (*Payment, error) {
-	err := c.MakeRequest("POST", "/", params, params)
+	err := c.MakeRequest("POST", "/payments", params, params)
 	return params, err
 }
 
 // Get All Payments: https://api-reference.zebedee.io/#08ea69cc-dd6f-4381-a489-18004b911f96
-func (c *Client) ListPayments(params *Payment) ([]Payment, error) {
+func (c *Client) ListPayments() ([]Payment, error) {
 	var payments []Payment
 	err := c.MakeRequest("GET", "/payments", nil, &payments)
 	return payments, err
