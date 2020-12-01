@@ -88,6 +88,29 @@ func TestCharges(t *testing.T) {
 	}
 }
 
+func TestChargesBad(t *testing.T) {
+	_, err := client.Charge(&Charge{
+		Amount:      "123000000",
+		Description: "a test invoice",
+		InternalID:  "testb",
+	})
+	if err == nil {
+		t.Errorf(".Charge() should have returned an error")
+	}
+	if err.Error() != "The maximum Charge amount supported is 45,000 satoshis." {
+		t.Errorf(".Charge() returned the wrong error")
+	}
+
+	_, err = client.Charge(&Charge{
+		Amount:      "-120",
+		Description: "a test invoice",
+		InternalID:  "testb",
+	})
+	if err == nil {
+		t.Errorf(".Charge() should have returned an error")
+	}
+}
+
 func TestWithdrawalRequests(t *testing.T) {
 	wr, err := client.WithdrawalRequest(&WithdrawalRequest{
 		ExpiresIn:   30 * 60,
@@ -115,6 +138,9 @@ func TestWithdrawalRequests(t *testing.T) {
 		t.Errorf("got error from .GetWithdrawalRequest(): %s", err)
 	}
 
+	if wr.Status != "pending" {
+		t.Errorf("wr is not pending")
+	}
 	if wr.Amount != "50000" {
 		t.Error("wr amount is different than specified")
 	}
@@ -139,6 +165,18 @@ func TestWithdrawalRequests(t *testing.T) {
 	if wrs[len(wrs)-1].ID != wr.ID {
 		t.Errorf("last wr from list is not the wr we just created (%s != %s)",
 			wrs[len(wrs)-1].ID, wr.ID)
+	}
+}
+
+func TestWithdrawalRequestsBad(t *testing.T) {
+	_, err := client.WithdrawalRequest(&WithdrawalRequest{
+		Amount:      "5000000",
+		Description: "a test withdrawal request",
+		InternalID:  "testd",
+		CallbackURL: "https://example.com/callback",
+	})
+	if err == nil {
+		t.Errorf(".WithdrawalRequest() should have returned an error")
 	}
 }
 
@@ -181,5 +219,14 @@ func TestPayments(t *testing.T) {
 
 	if payment.Amount != "10000" || payment.Description != "test zebedee-go" {
 		t.Errorf("details of the payment are wrong")
+	}
+}
+
+func TestPaymentsBad(t *testing.T) {
+	_, err := client.Pay(&Payment{
+		Invoice: "x",
+	})
+	if err == nil {
+		t.Errorf(".Pay() should have returned an error")
 	}
 }
