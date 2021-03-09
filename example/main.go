@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	zebedee "github.com/zebedeeio/zebedee-go"
+	zebedee "github.com/zebedeeio/go-sdk"
 )
 
 func main() {
-	zbd := zebedee.New("")
+	zbd := zebedee.New("API-KEY-GOES-HERE")
 
 	// generate a charge
 	charge, _ := zbd.Charge(&zebedee.Charge{
