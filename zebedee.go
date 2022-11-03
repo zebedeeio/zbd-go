@@ -157,3 +157,12 @@ func (c *Client) GetPayment(paymentID string) (*Payment, error) {
 	err := c.MakeRequest("GET", "/payments/"+paymentID, nil, &payment)
 	return &payment, err
 }
+
+// Get API Production IPs: https://api-reference.zebedee.io/#c7e18276-6935-4cca-89ae-ad949efe9a6a
+func (c *Client) GetProductionIPs() ([]string, error) {
+	var ips struct {
+		IPs []string `json:"ips"`
+	}
+	err := c.MakeRequest("GET", "/prod-ipds", nil, &ips)
+	return ips.IPs, err
+}
