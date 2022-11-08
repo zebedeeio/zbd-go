@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
+	"time"
 )
 
 // BaseURL is https://api.zebedee.io/v0 by default.
@@ -156,6 +158,87 @@ func (c *Client) GetPayment(paymentID string) (*Payment, error) {
 	var payment Payment
 	err := c.MakeRequest("GET", "/payments/"+paymentID, nil, &payment)
 	return &payment, err
+}
+
+// Send Payment to Gamertag: https://api-reference.zebedee.io/#8da3c4a3-ecf0-4fcc-be17-72e34051a1e9
+func (c *Client) SendGamertagPayment(gamertag, amount, description string) (*PeerPaymentResult, error) {
+	var payment PeerPaymentResult
+	err := c.MakeRequest("POST", "/gamertag/send-payment", struct {
+		Gamertag    string `json:"gamertag"`
+		Amount      string `json:"amount"`
+		Description string `json:"description"`
+	}{gamertag, amount, description}, &payment)
+	return &payment, err
+}
+
+// Fetch Gamertag Transaction Details By ID: https://api-reference.zebedee.io/#80571b36-eac4-4966-9c49-1b83d0ae466e
+func (c *Client) FetchGamerTagTransaction(transactionID string) (*PeerPayment, error) {
+	var payment PeerPayment
+	err := c.MakeRequest("GET", "/gamertag/transaction/"+transactionID, nil, &payment)
+	return &payment, err
+}
+
+// Fetch User ID By Gamertag: https://api-reference.zebedee.io/#8442d428-d4be-4082-b4a2-6e9489fe4fdf
+func (c *Client) FetchUserIDFromGamertag(gamertag string) (string, error) {
+	var data struct {
+		ID string `json:"id"`
+	}
+	err := c.MakeRequest("GET", "/user-id/gamertag/"+gamertag, nil, &data)
+	return data.ID, err
+}
+
+// Fetch Gamertag By User ID: https://api-reference.zebedee.io/#61085d46-675f-4000-9017-9973fb1cdc80
+func (c *Client) FetchGamertagFromUserID(userID string) (string, error) {
+	var data struct {
+		Gamertag string `json:"gamertag"`
+	}
+	err := c.MakeRequest("GET", "/gamertag/user-id/"+userID, nil, &data)
+	return data.Gamertag, err
+}
+
+// Fetch Charge from Gamertag: https://api.zebedee.io/v0/gamertag/charges
+func (c *Client) CreateGamertagCharge(gamertag, amount, description string) (*Charge, error) {
+	var data struct {
+		ID               string    `json:"id"`
+		Unit             string    `json:"unit"`
+		CreatedAt        time.Time `json:"createdAt"`
+		Status           string    `json:"status"`
+		InternalID       string    `json:"internalId"`
+		Amount           string    `json:"amount"`
+		Description      string    `json:"description"`
+		InvoiceRequest   string    `json:"invoiceRequest"`
+		InvoiceExpiresAt time.Time `json:"invoiceExpiresAt"`
+	}
+	err := c.MakeRequest("POST", "/gamertag/charges", struct {
+		Gamertag    string `json:"gamertag"`
+		Amount      string `json:"amount"`
+		Description string `json:"description"`
+	}{gamertag, amount, description}, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	readableStatus := data.Status
+	spl := strings.Split(data.Status, "_")
+	if len(spl) == 2 {
+		readableStatus = strings.ToLower(spl[1])
+	}
+
+	return &Charge{
+		ExpiresIn:   int64(data.InvoiceExpiresAt.Sub(time.Now()).Seconds()),
+		Unit:        data.Unit,
+		Amount:      data.Amount,
+		Status:      readableStatus,
+		Description: data.Description,
+		CreatedAt:   data.CreatedAt,
+		ExpiresAt:   data.InvoiceExpiresAt,
+		ID:          data.ID,
+		InternalID:  data.InternalID,
+		Invoice: struct {
+			Request string `json:"request"`
+			URI     string `json:"uri"`
+		}{data.InvoiceRequest, "lightning:" + data.InvoiceRequest},
+	}, nil
 }
 
 // Get API Production IPs: https://api-reference.zebedee.io/#c7e18276-6935-4cca-89ae-ad949efe9a6a

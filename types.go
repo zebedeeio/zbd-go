@@ -2,13 +2,11 @@ package zebedee
 
 import "time"
 
-// The Wallet Object: https://documentation.zebedee.io/docs/wallet-main/
 type Wallet struct {
 	Unit    string `json:"unit"`
 	Balance string `json:"balance"`
 }
 
-// The Charge Object: https://documentation.zebedee.io/docs/charges-main
 type Charge struct {
 	ExpiresIn   int64     `json:"expiresIn"`
 	Unit        string    `json:"unit"`
@@ -27,7 +25,6 @@ type Charge struct {
 	} `json:"invoice"`
 }
 
-// The Withdrawal Request: https://documentation.zebedee.io/docs/withdrawals-main
 type WithdrawalRequest struct {
 	ExpiresIn   int64     `json:"expiresIn"`
 	Unit        string    `json:"unit"`
@@ -47,7 +44,6 @@ type WithdrawalRequest struct {
 	} `json:"invoice"`
 }
 
-// The Payment Object: https://documentation.zebedee.io/docs/payments-main
 type Payment struct {
 	Fee         string    `json:"fee"`
 	Unit        string    `json:"unit"`
@@ -58,4 +54,23 @@ type Payment struct {
 	Description string    `json:"description"`
 	InternalID  string    `json:"internalId"`
 	Invoice     string    `json:"invoice"`
+}
+
+type PeerPaymentResult struct {
+	ReceiverId    string `json:"receiverId"`
+	TransactionId string `json:"transactionId"`
+	Amount        string `json:"amount"`
+	Comment       string `json:"comment"`
+}
+
+type PeerPayment struct {
+	ID          string    `json:"id"`
+	ReceiverID  string    `json:"receiverId"`
+	Amount      string    `json:"amount"`
+	Fee         string    `json:"fee"`
+	Unit        string    `json:"unit"`
+	ProcessedAt time.Time `json:"processedAt"`
+	ConfirmedAt time.Time `json:"confirmedAt"`
+	Comment     string    `json:"comment"`
+	Status      string    `json:"status"`
 }
