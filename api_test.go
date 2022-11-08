@@ -19,6 +19,7 @@ func TestWallet(t *testing.T) {
 	_, err := client.Wallet()
 	if err != nil {
 		t.Errorf("got error from .Wallet(): %s", err)
+		return
 	}
 }
 
@@ -47,44 +48,44 @@ func TestCharges(t *testing.T) {
 	})
 	if err != nil {
 		t.Errorf("got error from .Charge(): %s", err)
-	}
-	if charge.ExpiresAt.After(time.Now().Add(time.Minute * 30)) {
-		t.Error("charge expires after we wanted")
-	}
-	if !strings.HasPrefix(charge.Invoice.Request, "lnbc123") {
-		t.Error("charge has wrong bolt11 invoice")
+	} else {
+		if charge.ExpiresAt.After(time.Now().Add(time.Minute * 30)) {
+			t.Error("charge expires after we wanted")
+		}
+		if !strings.HasPrefix(charge.Invoice.Request, "lnbc123") {
+			t.Error("charge has wrong bolt11 invoice")
+		}
 	}
 
 	// fetch this same charge
 	charge, err = client.GetCharge(charge.ID)
 	if err != nil {
 		t.Errorf("got error from .GetCharge(): %s", err)
-	}
-
-	if charge.Amount != "123000" {
-		t.Error("charge amount is different than specified")
-	}
-	if charge.Description != "a test invoice" {
-		t.Error("charge description is different than specified")
-	}
-	if charge.InternalID != "testx" {
-		t.Error("charge internal id is different than specified")
-	}
-	if charge.CallbackURL != "https://example.com/callback" {
-		t.Error("charge callback url is different than specified")
+	} else {
+		if charge.Amount != "123000" {
+			t.Error("charge amount is different than specified")
+		}
+		if charge.Description != "a test invoice" {
+			t.Error("charge description is different than specified")
+		}
+		if charge.InternalID != "testx" {
+			t.Error("charge internal id is different than specified")
+		}
+		if charge.CallbackURL != "https://example.com/callback" {
+			t.Error("charge callback url is different than specified")
+		}
 	}
 
 	// get all charges
 	charges, err := client.ListCharges()
 	if err != nil {
 		t.Errorf("got error from .ListCharges(): %s", err)
-	}
-
-	sort.Slice(charges, func(i, j int) bool { return charges[i].CreatedAt.Before(charges[j].CreatedAt) })
-
-	if charges[len(charges)-1].ID != charge.ID {
-		t.Errorf("last charge from list is not the charge we just created (%s != %s)",
-			charges[len(charges)-1].ID, charge.ID)
+	} else {
+		sort.Slice(charges, func(i, j int) bool { return charges[i].CreatedAt.Before(charges[j].CreatedAt) })
+		if charges[len(charges)-1].ID != charge.ID {
+			t.Errorf("last charge from list is not the charge we just created (%s != %s)",
+				charges[len(charges)-1].ID, charge.ID)
+		}
 	}
 }
 
@@ -96,8 +97,7 @@ func TestChargesBad(t *testing.T) {
 	})
 	if err == nil {
 		t.Errorf(".Charge() should have returned an error")
-	}
-	if err.Error() != "The maximum Charge amount supported is 45,000 satoshis." {
+	} else if err.Error() != "The maximum Charge amount supported is 45,000 satoshis." {
 		t.Errorf(".Charge() returned the wrong error")
 	}
 
@@ -121,50 +121,50 @@ func TestWithdrawalRequests(t *testing.T) {
 	})
 	if err != nil {
 		t.Errorf("got error from .WithdrawalRequest(): %s", err)
-	}
-	if wr.ExpiresAt.After(time.Now().Add(time.Minute * 30)) {
-		t.Error("wr expires after we wanted")
-	}
-	if !strings.HasPrefix(wr.Invoice.Request, "lnurl1") {
-		t.Errorf("wr has something that isn't an lnurl: '%s'", wr.Invoice.Request)
-	}
-	if !strings.HasPrefix(wr.Invoice.FastRequest, "lnurl1") {
-		t.Errorf("wr has something that isn't a fast lnurl: '%s'", wr.Invoice.Request)
+	} else {
+		if wr.ExpiresAt.After(time.Now().Add(time.Minute * 30)) {
+			t.Error("wr expires after we wanted")
+		}
+		if !strings.HasPrefix(wr.Invoice.Request, "lnurl1") {
+			t.Errorf("wr has something that isn't an lnurl: '%s'", wr.Invoice.Request)
+		}
+		if !strings.HasPrefix(wr.Invoice.FastRequest, "lnurl1") {
+			t.Errorf("wr has something that isn't a fast lnurl: '%s'", wr.Invoice.Request)
+		}
 	}
 
 	// fetch this same wr
 	wr, err = client.GetWithdrawalRequest(wr.ID)
 	if err != nil {
 		t.Errorf("got error from .GetWithdrawalRequest(): %s", err)
-	}
-
-	if wr.Status != "pending" {
-		t.Errorf("wr is not pending")
-	}
-	if wr.Amount != "50000" {
-		t.Error("wr amount is different than specified")
-	}
-	if wr.Description != "a test withdrawal request" {
-		t.Error("wr description is different than specified")
-	}
-	if wr.InternalID != "testy" {
-		t.Error("wr internal id is different than specified")
-	}
-	if wr.CallbackURL != "https://example.com/callback" {
-		t.Error("wr callback url is different than specified")
+	} else {
+		if wr.Status != "pending" {
+			t.Errorf("wr is not pending")
+		}
+		if wr.Amount != "50000" {
+			t.Error("wr amount is different than specified")
+		}
+		if wr.Description != "a test withdrawal request" {
+			t.Error("wr description is different than specified")
+		}
+		if wr.InternalID != "testy" {
+			t.Error("wr internal id is different than specified")
+		}
+		if wr.CallbackURL != "https://example.com/callback" {
+			t.Error("wr callback url is different than specified")
+		}
 	}
 
 	// get all wrs
 	wrs, err := client.ListWithdrawalRequests()
 	if err != nil {
 		t.Errorf("got error from .ListWithdrawalRequests(): %s", err)
-	}
-
-	sort.Slice(wrs, func(i, j int) bool { return wrs[i].CreatedAt.Before(wrs[j].CreatedAt) })
-
-	if wrs[len(wrs)-1].ID != wr.ID {
-		t.Errorf("last wr from list is not the wr we just created (%s != %s)",
-			wrs[len(wrs)-1].ID, wr.ID)
+	} else {
+		sort.Slice(wrs, func(i, j int) bool { return wrs[i].CreatedAt.Before(wrs[j].CreatedAt) })
+		if wrs[len(wrs)-1].ID != wr.ID {
+			t.Errorf("last wr from list is not the wr we just created (%s != %s)",
+				wrs[len(wrs)-1].ID, wr.ID)
+		}
 	}
 }
 
@@ -193,32 +193,34 @@ func TestPayments(t *testing.T) {
 	payments, err := client.ListPayments()
 	if err != nil {
 		t.Errorf("got error from .ListPayments(): %s", err)
+	} else {
+		if len(payments) != 1 {
+			t.Errorf("should have returned one payment, but instead returned %d",
+				len(payments))
+		}
 	}
 
-	if len(payments) != 1 {
-		t.Errorf("should have returned one payment, but instead returned %d",
-			len(payments))
-	}
-
-	payment, err := client.GetPayment(payments[0].ID)
-	if err != nil {
-		t.Errorf("got error from .GetPayment(): %s", err)
-	}
-	if payment.ID != payments[0].ID {
-		t.Errorf("got a payment with an id different than requested")
-	}
-	if payment.Amount != payments[0].Amount ||
-		payment.Fee != payments[0].Fee ||
-		payment.Status != payments[0].Status ||
-		payment.Invoice != payments[0].Invoice ||
-		payment.Description != payments[0].Description ||
-		payment.InternalID != payments[0].InternalID {
-		t.Errorf("payment returned from .ListPayments() is different from the" +
-			" same payment returned from .GetPayment()")
-	}
-
-	if payment.Amount != "10000" || payment.Description != "test zebedee-go" {
-		t.Errorf("details of the payment are wrong")
+	if len(payments) > 0 {
+		payment, err := client.GetPayment(payments[0].ID)
+		if err != nil {
+			t.Errorf("got error from .GetPayment(): %s", err)
+		} else {
+			if payment.ID != payments[0].ID {
+				t.Errorf("got a payment with an id different than requested")
+			}
+			if payment.Amount != payments[0].Amount ||
+				payment.Fee != payments[0].Fee ||
+				payment.Status != payments[0].Status ||
+				payment.Invoice != payments[0].Invoice ||
+				payment.Description != payments[0].Description ||
+				payment.InternalID != payments[0].InternalID {
+				t.Errorf("payment returned from .ListPayments() is different from the" +
+					" same payment returned from .GetPayment()")
+			}
+			if payment.Amount != "10000" || payment.Description != "test zebedee-go" {
+				t.Errorf("details of the payment are wrong")
+			}
+		}
 	}
 }
 
