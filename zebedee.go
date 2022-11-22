@@ -246,6 +246,6 @@ func (c *Client) GetProductionIPs() ([]string, error) {
 	var ips struct {
 		IPs []string `json:"ips"`
 	}
-	err := c.MakeRequest("GET", "/prod-ipds", nil, &ips)
+	err := c.MakeRequest("GET", "/prod-ips", nil, &ips)
 	return ips.IPs, err
 }
