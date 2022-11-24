@@ -8,18 +8,19 @@ type Wallet struct {
 }
 
 type Charge struct {
-	ExpiresIn   int64     `json:"expiresIn"`
-	Unit        string    `json:"unit"`
-	Amount      string    `json:"amount"`
-	ConfirmedAt time.Time `json:"confirmedAt"`
-	Status      string    `json:"status"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"createdAt"`
-	ExpiresAt   time.Time `json:"expiresAt"`
-	ID          string    `json:"id"`
-	InternalID  string    `json:"internalId"`
-	CallbackURL string    `json:"callbackUrl"`
-	Invoice     struct {
+	ExpiresIn       int64     `json:"expiresIn"`
+	Unit            string    `json:"unit"`
+	Amount          string    `json:"amount"`
+	ConfirmedAt     time.Time `json:"confirmedAt"`
+	Status          string    `json:"status"`
+	Description     string    `json:"description"`
+	DescriptionHash string    `json:"invoiceDescriptionHash"`
+	CreatedAt       time.Time `json:"createdAt"`
+	ExpiresAt       time.Time `json:"expiresAt"`
+	ID              string    `json:"id"`
+	InternalID      string    `json:"internalId"`
+	CallbackURL     string    `json:"callbackUrl"`
+	Invoice         struct {
 		Request string `json:"request"`
 		URI     string `json:"uri"`
 	} `json:"invoice"`
