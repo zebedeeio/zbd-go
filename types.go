@@ -255,3 +255,25 @@ type ProdIPSDataResponseType struct {
 	} `json:"data"`
 	Success bool `json:"success"`
 }
+
+type InternalTransferDataResponseType struct {
+	Data struct {
+		ID               string `json:"id"`
+		SenderWalletId   string `json:"senderWalletId"`
+		ReceivedWalletId string `json:"receivedWalletId"`
+		UserID           string `json:"userId"`
+		SendTxId         string `json:"sendTxId"`
+		ReceiveTxId      string `json:"receiveTxId"`
+		Status           string `json:"status"`
+		Amount           string `json:"amount"`
+		CreatedAt        string `json:"createdAt"`
+		UpdatedAt        string `json:"updatedAt"`
+	} `json:"data"`
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+}
+
+type InternalTransferOptionsType struct {
+	Amount           string `json:"amount"`
+	ReceiverWalletId string `json:"receiverWalletId"`
+}

@@ -517,3 +517,27 @@ func TestGetZBDProdIps(t *testing.T) {
 		t.Errorf("Expected valid response with non-empty list of ZBD production IPs")
 	}
 }
+
+func TestInternalTransfer(t *testing.T) {
+	transferParams := InternalTransferOptionsType{
+		Amount:           "10000",
+		ReceiverWalletId: "b904ee02-ec0b-4fd4-b99f-1f2d3d0001a6",
+	}
+
+	// Perform the internal transfer
+	response, err := client.InternalTransfer(transferParams)
+	if err != nil {
+		// Check if the error message contains the expected string
+		expectedErrorMessage := "Error processing transfer."
+		if !strings.Contains(err.Error(), expectedErrorMessage) {
+			t.Errorf("Expected error message to contain \"%s\", got \"%s\"", expectedErrorMessage, err.Error())
+		}
+		return
+	}
+
+	// Check if the success message contains the expected string
+	expectedSuccessMessage := "was a good transfer but it shouldnt be"
+	if !strings.Contains(response.Message, expectedSuccessMessage) {
+		t.Errorf("Expected success message to contain \"%s\", got \"%s\"", expectedSuccessMessage, response.Message)
+	}
+}

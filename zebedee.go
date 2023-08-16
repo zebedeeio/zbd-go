@@ -475,6 +475,40 @@ func (c *Client) GetZBDProdIps() (*ProdIPSDataResponseType, error) {
 	return &res, err
 }
 
+// Internal transfer functions
+
+// InternalTransfer initiates an internal transfer of funds between two user wallets.
+//
+// This function makes a POST request to the API's "/internal-transfer" endpoint using the provided
+// InternalTransferOptionsType parameters to initiate the transfer of funds from the sender wallet
+// to the receiver wallet.
+//
+// Parameters:
+//   - param: InternalTransferOptionsType containing the required parameters for the internal transfer.
+//            This includes the amount to transfer and the receiver wallet ID.
+//
+// Returns:
+//   - *InternalTransferDataResponseType: A pointer to the response containing details about the internal transfer.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//   transferParams := InternalTransferOptionsType{
+//     Amount:           "5000",
+//     ReceiverWalletId: "receiver-wallet-id",
+//   }
+//   response, err := client.InternalTransfer(transferParams)
+//   if err != nil {
+//     fmt.Println("Error initiating internal transfer:", err)
+//     return
+//   }
+//   fmt.Println("Internal transfer details:", response.Data)
+
+func (c *Client) InternalTransfer(param InternalTransferOptionsType) (*InternalTransferDataResponseType, error) {
+	var res InternalTransferDataResponseType
+	err := c.MakeRequest("POST", "/internal-transfer", param, &res)
+	return &res, err
+}
+
 // Create Withdrawal Request: https://api-reference.zebedee.io/#60cee894-009f-40dc-9cba-e9aec5ce8aa9
 //
 // Takes an WithdrawalRequest object containing only
