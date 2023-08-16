@@ -229,3 +229,29 @@ type KeysendOptionsType struct {
 	Metadata    string `json:"metadata"`
 	CallbackURL string `json:"callbackUrl"`
 }
+
+type BTCUSDDataResponseType struct {
+	Data struct {
+		BTCUSDPrice     string `json:"btcUsdPrice"`
+		BTCUSDTimestamp string `json:"btcUsdTimestamp"`
+	} `json:"data"`
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+}
+
+type SupportedRegionDataResponseType struct {
+	Data struct {
+		IPAddress   string `json:"ipAddress"`
+		IsSupported bool   `json:"isSupported"`
+		IPCountry   string `json:"ipCountry"`
+		IPRegion    string `json:"ipRegion"`
+	} `json:"data"`
+	Success bool `json:"success"`
+}
+
+type ProdIPSDataResponseType struct {
+	Data struct {
+		IPS []string `json:"ips"`
+	} `json:"data"`
+	Success bool `json:"success"`
+}

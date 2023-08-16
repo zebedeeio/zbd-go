@@ -397,6 +397,84 @@ func (c *Client) SendKeysendPayment(params KeysendOptionsType) (*KeysendDataResp
 	return &res, err
 }
 
+// Utils functions
+
+// GetBtcUsdExchangeRate retrieves the current BTC to USD exchange rate.
+//
+// This function makes a GET request to the API's "/btcusd" endpoint to fetch the
+// current BTC to USD exchange rate and its associated timestamp.
+//
+// Returns:
+//   - *BTCUSDDataResponseType: A pointer to the response containing the BTC to USD exchange rate
+//     and timestamp.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//   response, err := client.GetBtcUsdExchangeRate()
+//   if err != nil {
+//     fmt.Println("Error fetching BTC to USD exchange rate:", err)
+//     return
+//   }
+//   fmt.Printf("BTC to USD exchange rate: %s\n", response.Data.BTCUSDPrice)
+//   fmt.Printf("Exchange rate timestamp: %s\n", response.Data.BTCUSDTimestamp)
+
+func (c *Client) GetBTCUSDExchangeRate() (*BTCUSDDataResponseType, error) {
+	var res BTCUSDDataResponseType
+	err := c.MakeRequest("GET", "/btcusd", nil, &res)
+	return &res, err
+}
+
+// IsSupportedRegion checks if the specified IP address is from a supported region.
+//
+// This function makes a GET request to the API's "/is-supported-region" endpoint
+// using the provided IP address as a parameter to determine if the region is supported.
+//
+// Parameters:
+//   - ipAddress: The IP address to check for support.
+//
+// Returns:
+//   - *SupportedRegionDataResponseType: A pointer to the response indicating whether
+//     the IP address is from a supported region.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//
+//	ipAddress := "127.0.0.1"
+//	response, err := client.IsSupportedRegion(ipAddress)
+//	if err != nil {
+//	  fmt.Println("Error checking supported region:", err)
+//	  return
+//	}
+//	fmt.Println("Is supported region:", response.Data.IsSupported)
+func (c *Client) IsSupportedRegion(ipAddress string) (*SupportedRegionDataResponseType, error) {
+	var res SupportedRegionDataResponseType
+	err := c.MakeRequest("GET", "/is-supported-region/"+ipAddress, nil, &res)
+	return &res, err
+}
+
+// GetZBDProdIps retrieves the list of ZBD production IP addresses.
+//
+// This function makes a GET request to the API's "/prod-ips" endpoint to fetch
+// the list of ZBD production IP addresses.
+//
+// Returns:
+//   - *ProdIPSDataResponseType: A pointer to the response containing the list of ZBD production IP addresses.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//   response, err := client.GetZBDProdIps()
+//   if err != nil {
+//     fmt.Println("Error fetching ZBD production IPs:", err)
+//     return
+//   }
+//   fmt.Println("ZBD production IPs:", response.Data.IPS)
+
+func (c *Client) GetZBDProdIps() (*ProdIPSDataResponseType, error) {
+	var res ProdIPSDataResponseType
+	err := c.MakeRequest("GET", "/prod-ips", nil, &res)
+	return &res, err
+}
+
 // Create Withdrawal Request: https://api-reference.zebedee.io/#60cee894-009f-40dc-9cba-e9aec5ce8aa9
 //
 // Takes an WithdrawalRequest object containing only

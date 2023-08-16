@@ -1,6 +1,7 @@
 package zebedee
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 	"testing"
@@ -456,5 +457,63 @@ func TestSendkeysendPayment(t *testing.T) {
 	}
 	if response.Data.Transaction.Type != "keysend" {
 		t.Errorf("Expected transaction type to be 'keysend', got '%s'", response.Data.Transaction.Type)
+	}
+}
+
+func TestGetBtcUsdExchangeRate(t *testing.T) {
+	response, err := client.GetBTCUSDExchangeRate()
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error fetching BTC to USD exchange rate: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil {
+		t.Error("Expected non-nil response, got nil")
+		return
+	}
+
+	// You can add more assertions based on the structure of BTCUSDDataResponseType
+	fmt.Printf("BTC to USD exchange rate: %s\n", response.Data.BTCUSDPrice)
+	fmt.Printf("Exchange rate timestamp: %s\n", response.Data.BTCUSDTimestamp)
+
+}
+
+func TestIsSupportedRegion(t *testing.T) {
+	ipAddress := "127.0.0.1"
+	response, err := client.IsSupportedRegion(ipAddress)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error checking supported region: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil {
+		t.Errorf("Expected valid response with data, got nil")
+		return
+	}
+
+	// You can add more assertions based on the structure of SupportedRegionDataResponseType
+	if !response.Data.IsSupported {
+		t.Errorf("Expected supported region, got unsupported")
+	}
+}
+
+func TestGetZBDProdIps(t *testing.T) {
+	response, err := client.GetZBDProdIps()
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error fetching ZBD production IPs: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || len(response.Data.IPS) == 0 {
+		t.Errorf("Expected valid response with non-empty list of ZBD production IPs")
 	}
 }
