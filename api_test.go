@@ -276,3 +276,34 @@ func TestCreateStaticCharge(t *testing.T) {
 	// Print the created charge ID for reference
 	t.Logf("Created Charge ID: %s", response.Data.ID)
 }
+
+func TestGetStaticCharge(t *testing.T) {
+
+	// Create a static charge to retrieve its ID for testing
+	chargeOptions := StaticChargeOptionsType{
+		MinAmount:      "1000",
+		MaxAmount:      "50000",
+		Description:    "Sample charge",
+		InternalID:     "charge123",
+		CallbackURL:    "https://example.com/callback",
+		SuccessMessage: "Charge successful",
+	}
+	createdCharge, err := client.CreateStaticCharge(chargeOptions)
+	if err != nil {
+		t.Fatalf("Error creating static charge for testing: %v", err)
+	}
+
+	// Call the function being tested
+	response, err := client.GetStaticCharge(createdCharge.Data.ID)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error fetching static charge: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || response.Data.ID != createdCharge.Data.ID {
+		t.Errorf("Expected valid response with matching charge ID, got nil or mismatched ID")
+	}
+}

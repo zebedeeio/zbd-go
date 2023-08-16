@@ -195,7 +195,34 @@ func (c *Client) GetCharge(chargeID string) (*Charge, error) {
 //	fmt.Println("Created Charge ID:", response.Data.ID)
 func (c *Client) CreateStaticCharge(param StaticChargeOptionsType) (*StaticChargeDataResponseType, error) {
 	var res StaticChargeDataResponseType
-	err := c.MakeRequest("/POST", "/static-charges", param, &res)
+	err := c.MakeRequest("POST", "/static-charges", param, &res)
+	return &res, err
+}
+
+// GetStaticCharge retrieves the details of a static charge by its ID.
+//
+// The function makes a GET request to the API's "static-charges" endpoint using the provided
+// staticChargeID as a parameter to fetch the information about the static charge.
+//
+// Parameters:
+//   - staticChargeID: The unique identifier of the static charge to retrieve.
+//
+// Returns:
+//   - *StaticChargeDataResponseType: A pointer to the response containing the static charge details.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//
+//	chargeID := "sample-charge-id"
+//	response, err := client.GetStaticCharge(chargeID)
+//	if err != nil {
+//	  fmt.Println("Error fetching static charge:", err)
+//	  return
+//	}
+//	fmt.Println("Static charge data:", response.Data)
+func (c *Client) GetStaticCharge(staticChargeID string) (*StaticChargeDataResponseType, error) {
+	var res StaticChargeDataResponseType
+	err := c.MakeRequest("GET", "static-charges/"+staticChargeID, nil, res)
 	return &res, err
 }
 
