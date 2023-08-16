@@ -222,7 +222,7 @@ func (c *Client) CreateStaticCharge(param StaticChargeOptionsType) (*StaticCharg
 //	fmt.Println("Static charge data:", response.Data)
 func (c *Client) GetStaticCharge(staticChargeID string) (*StaticChargeDataResponseType, error) {
 	var res StaticChargeDataResponseType
-	err := c.MakeRequest("GET", "static-charges/"+staticChargeID, nil, &res)
+	err := c.MakeRequest("GET", "/static-charges/"+staticChargeID, nil, &res)
 	return &res, err
 }
 
@@ -258,7 +258,7 @@ func (c *Client) GetStaticCharge(staticChargeID string) (*StaticChargeDataRespon
 //	fmt.Println("Updated static charge data:", updatedCharge.Data)
 func (c *Client) UpdateStaticCharge(staticChargeID string, param StaticChargeOptionsType) (*StaticChargeDataResponseType, error) {
 	var res StaticChargeDataResponseType
-	err := c.MakeRequest("PATCH", "static-charges/"+staticChargeID, param, &res)
+	err := c.MakeRequest("PATCH", "/static-charges/"+staticChargeID, param, &res)
 	return &res, err
 }
 
@@ -293,7 +293,7 @@ func (c *Client) UpdateStaticCharge(staticChargeID string, param StaticChargeOpt
 //	fmt.Println("Payment ID:", paymentResponse.Data.ID)
 func (c *Client) SendLightningAddressPayment(param SendLightningAddressPaymentOptionsType) (*SendLightningAddressPaymentDataResponseType, error) {
 	var res SendLightningAddressPaymentDataResponseType
-	err := c.MakeRequest("POST", "ln-address/send-payment/", param, &res)
+	err := c.MakeRequest("POST", "/ln-address/send-payment/", param, &res)
 	return &res, err
 }
 
@@ -323,7 +323,7 @@ func (c *Client) SendLightningAddressPayment(param SendLightningAddressPaymentOp
 //	fmt.Println("LN address validation result:", response.Data.Valid)
 func (c *Client) ValidateLightningAddress(lightningAddress string) (*ValidateLightningAddressDataResponseType, error) {
 	var res ValidateLightningAddressDataResponseType
-	err := c.MakeRequest("GET", "ln-address/validate/"+lightningAddress, nil, &res)
+	err := c.MakeRequest("GET", "/ln-address/validate/"+lightningAddress, nil, &res)
 	return &res, err
 }
 
@@ -357,7 +357,43 @@ func (c *Client) ValidateLightningAddress(lightningAddress string) (*ValidateLig
 //	fmt.Println("Charge details:", response.Data)
 func (c *Client) CreateChargeForLightningAddress(params CreateChargeFromLightningAddressOptionsType) (*FetchChargeFromLightningAddressDataResponseType, error) {
 	var res FetchChargeFromLightningAddressDataResponseType
-	err := c.MakeRequest("POST", "ln-address/fetch-charge", params, &res)
+	err := c.MakeRequest("POST", "/ln-address/fetch-charge", params, &res)
+	return &res, err
+}
+
+// Keysend endpoints:
+
+// SendKeysendPayment initiates a keysend payment to a Lightning Network node.
+//
+// This function makes a POST request to the API's "/keysend-payment" endpoint using the
+// provided KeysendOptionsType parameters to initiate a keysend payment to the specified
+// Lightning Network pubkey.
+//
+// Parameters:
+//   - params: KeysendOptionsType containing the required parameters for initiating the keysend payment.
+//
+// Returns:
+//   - *KeysendDataResponseType: A pointer to the response containing information about the initiated keysend payment.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//
+//	keysendParams := KeysendOptionsType{
+//	  Amount:      "1000",
+//	  Pubkey:      "02abcd...",
+//	  TLVRecords:  "my-tlv-records",
+//	  Metadata:    "additional-metadata",
+//	  CallbackURL: "https://example.com/callback",
+//	}
+//	response, err := client.SendKeysendPayment(keysendParams)
+//	if err != nil {
+//	  fmt.Println("Error sending keysend payment:", err)
+//	  return
+//	}
+//	fmt.Println("Keysend payment details:", response.Data)
+func (c *Client) SendKeysendPayment(params KeysendOptionsType) (*KeysendDataResponseType, error) {
+	var res KeysendDataResponseType
+	err := c.MakeRequest("POST", "/keysend-payment", params, &res)
 	return &res, err
 }
 

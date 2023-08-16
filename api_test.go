@@ -431,3 +431,30 @@ func TestCreateChargeForLightningAddress(t *testing.T) {
 		t.Errorf("Expected valid response with matching LNAddress, got nil or mismatched LNAddress")
 	}
 }
+
+func TestSendkeysendPayment(t *testing.T) {
+	keysendParams := KeysendOptionsType{
+		Amount:      "1000",
+		Pubkey:      "02abcd...",
+		TLVRecords:  "my-tlv-records",
+		Metadata:    "additional-metadata",
+		CallbackURL: "https://example.com/callback",
+	}
+
+	// Call the function being tested
+	response, err := client.SendKeysendPayment(keysendParams)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error sending keysend payment: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || response.Data.KeysendID == "" {
+		t.Errorf("Expected valid response with keysend ID, got nil or empty ID")
+	}
+	if response.Data.Transaction.Type != "keysend" {
+		t.Errorf("Expected transaction type to be 'keysend', got '%s'", response.Data.Transaction.Type)
+	}
+}

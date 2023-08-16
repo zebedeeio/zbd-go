@@ -201,3 +201,31 @@ type FetchChargeFromLightningAddressDataResponseType struct {
 	} `json:"data"`
 	Success bool `json:"success"`
 }
+
+type KeysendDataResponseType struct {
+	Data struct {
+		KeysendID   string `json:"keysendId"`
+		PaymentID   string `json:"paymentId"`
+		Transaction struct {
+			ID          string `json:"id"`
+			WalletID    string `json:"walletId"`
+			Type        string `json:"type"`
+			TotalAmount string `json:"totalAmount"`
+			Fee         string `json:"fee"`
+			Amount      string `json:"amount"`
+			Description string `json:"description"`
+			Status      string `json:"status"`
+			ConfirmedAt string `json:"confirmedAt"`
+		} `json:"transaction"`
+	} `json:"data"`
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+}
+
+type KeysendOptionsType struct {
+	Amount      string `json:"amount"`
+	Pubkey      string `json:"pubkey"`
+	TLVRecords  string `json:"tlvRecords"`
+	Metadata    string `json:"metadata"`
+	CallbackURL string `json:"callbackUrl"`
+}
