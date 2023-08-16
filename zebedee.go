@@ -222,7 +222,13 @@ func (c *Client) CreateStaticCharge(param StaticChargeOptionsType) (*StaticCharg
 //	fmt.Println("Static charge data:", response.Data)
 func (c *Client) GetStaticCharge(staticChargeID string) (*StaticChargeDataResponseType, error) {
 	var res StaticChargeDataResponseType
-	err := c.MakeRequest("GET", "static-charges/"+staticChargeID, nil, res)
+	err := c.MakeRequest("GET", "static-charges/"+staticChargeID, nil, &res)
+	return &res, err
+}
+
+func (c *Client) UpdateStaticCharge(staticChargeID string, param StaticChargeOptionsType) (*StaticChargeDataResponseType, error) {
+	var res StaticChargeDataResponseType
+	err := c.MakeRequest("PATCH", "static-charges/"+staticChargeID, param, &res)
 	return &res, err
 }
 

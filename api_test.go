@@ -307,3 +307,50 @@ func TestGetStaticCharge(t *testing.T) {
 		t.Errorf("Expected valid response with matching charge ID, got nil or mismatched ID")
 	}
 }
+
+func TestUpdateStaticCharge(t *testing.T) {
+
+	// Create a static charge to retrieve its ID for testing
+	chargeOptions := StaticChargeOptionsType{
+		MinAmount:      "1000",
+		MaxAmount:      "50000",
+		Description:    "Sample charge",
+		InternalID:     "charge123",
+		CallbackURL:    "https://example.com/callback",
+		SuccessMessage: "Charge successful",
+	}
+	createdCharge, err := client.CreateStaticCharge(chargeOptions)
+	if err != nil {
+		t.Fatalf("Error creating static charge for testing: %v", err)
+	}
+
+	// Update the static charge with new options
+	newChargeOptions := StaticChargeOptionsType{
+		MinAmount:      "2000",
+		MaxAmount:      "60000",
+		Description:    "Updated charge",
+		InternalID:     "charge456",
+		CallbackURL:    "https://example.com/update-callback",
+		SuccessMessage: "Updated charge successful",
+	}
+
+	// Call the function being tested
+	response, err := client.UpdateStaticCharge(createdCharge.Data.ID, newChargeOptions)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error updating static charge: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || response.Data.ID != createdCharge.Data.ID {
+		t.Errorf("Expected valid response with matching charge ID, got nil or mismatched ID")
+	}
+	if response.Data.MinAmount != newChargeOptions.MinAmount {
+		t.Errorf("Expected MinAmount to be updated, got %s", response.Data.MinAmount)
+	}
+	if response.Data.MaxAmount != newChargeOptions.MaxAmount {
+		t.Errorf("Expected MaxAmount to be updated, got %s", response.Data.MaxAmount)
+	}
+}
