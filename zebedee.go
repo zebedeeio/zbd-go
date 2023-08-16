@@ -226,9 +226,138 @@ func (c *Client) GetStaticCharge(staticChargeID string) (*StaticChargeDataRespon
 	return &res, err
 }
 
+// UpdateStaticCharge updates the properties of a static charge identified by its ID.
+//
+// The function sends a PATCH request to the API's "static-charges" endpoint with the provided
+// staticChargeID as a parameter to update the properties of the specified static charge.
+// The updated properties are specified in the param parameter, which should be of type StaticChargeOptionsType.
+//
+// Parameters:
+//   - staticChargeID: The unique identifier of the static charge to update.
+//   - param: A StaticChargeOptionsType object containing the updated properties of the static charge.
+//
+// Returns:
+//   - *StaticChargeDataResponseType: A pointer to the response containing the updated static charge details.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//
+//	chargeID := "sample-charge-id"
+//	updatedCharge, err := client.UpdateStaticCharge(chargeID, StaticChargeOptionsType{
+//	  MinAmount:      "2000",
+//	  MaxAmount:      "60000",
+//	  Description:    "Updated charge",
+//	  InternalID:     "charge456",
+//	  CallbackURL:    "https://example.com/update-callback",
+//	  SuccessMessage: "Updated charge successful",
+//	})
+//	if err != nil {
+//	  fmt.Println("Error updating static charge:", err)
+//	  return
+//	}
+//	fmt.Println("Updated static charge data:", updatedCharge.Data)
 func (c *Client) UpdateStaticCharge(staticChargeID string, param StaticChargeOptionsType) (*StaticChargeDataResponseType, error) {
 	var res StaticChargeDataResponseType
 	err := c.MakeRequest("PATCH", "static-charges/"+staticChargeID, param, &res)
+	return &res, err
+}
+
+// Lightening Address
+
+// SendLightningAddressPayment initiates a lightning payment to the specified lightning address.
+//
+// The function sends a POST request to the API's "ln-address/send-payment/" endpoint with the provided
+// payment options specified in the param parameter to send a lightning payment to the specified lightning address.
+//
+// Parameters:
+//   - param: A SendLightningAddressPaymentOptionsType object containing the payment options and details.
+//
+// Returns:
+//   - *SendLightningAddressPaymentDataResponseType: A pointer to the response containing the payment details.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//
+//	paymentOptions := SendLightningAddressPaymentOptionsType{
+//	  LnAddress:   "lnbc123...",
+//	  Amount:      "1000",
+//	  Comment:     "Payment for goods",
+//	  CallbackUrl: "https://example.com/payment-callback",
+//	  InternalID:  "payment123",
+//	}
+//	paymentResponse, err := client.SendLightningAddressPayment(paymentOptions)
+//	if err != nil {
+//	  fmt.Println("Error sending lightning address payment:", err)
+//	  return
+//	}
+//	fmt.Println("Payment ID:", paymentResponse.Data.ID)
+func (c *Client) SendLightningAddressPayment(param SendLightningAddressPaymentOptionsType) (*SendLightningAddressPaymentDataResponseType, error) {
+	var res SendLightningAddressPaymentDataResponseType
+	err := c.MakeRequest("POST", "ln-address/send-payment/", param, &res)
+	return &res, err
+}
+
+// ValidateLightningAddress validates a Lightning Network (LN) address.
+//
+// The function makes a GET request to the API's "ln-address/validate" endpoint,
+// appending the provided lightningAddress to the URL, to check the validity of
+// the given LN address. The response contains information about whether the address
+// is valid and additional metadata associated with the address.
+//
+// Parameters:
+//   - lightningAddress: The Lightning Network address to validate.
+//
+// Returns:
+//   - *ValidateLightningAddressDataResponseType: A pointer to the response containing
+//     the validation result and associated metadata.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//
+//	lnAddress := "lnbc1..."
+//	response, err := client.ValidateLightningAddress(lnAddress)
+//	if err != nil {
+//	  fmt.Println("Error validating LN address:", err)
+//	  return
+//	}
+//	fmt.Println("LN address validation result:", response.Data.Valid)
+func (c *Client) ValidateLightningAddress(lightningAddress string) (*ValidateLightningAddressDataResponseType, error) {
+	var res ValidateLightningAddressDataResponseType
+	err := c.MakeRequest("GET", "ln-address/validate/"+lightningAddress, nil, &res)
+	return &res, err
+}
+
+// CreateChargeForLightningAddress creates a charge for a Lightning Network address.
+//
+// This function makes a POST request to the API's "ln-address/fetch-charge" endpoint
+// using the provided CreateChargeFromLightningAddressOptionsType parameters to create a
+// charge for the specified Lightning Network address.
+//
+// Parameters:
+//   - params: CreateChargeFromLightningAddressOptionsType containing the required parameters
+//     for creating the charge.
+//
+// Returns:
+//   - *FetchChargeFromLightningAddressDataResponseType: A pointer to the response containing
+//     the charge details for the Lightning Network address.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//
+//	chargeParams := CreateChargeFromLightningAddressOptionsType{
+//	  Amount:      "10000",
+//	  LNAddress:   "lnaddress123",
+//	  Description: "Charge for LN address",
+//	}
+//	response, err := client.CreateChargeForLightningAddress(chargeParams)
+//	if err != nil {
+//	  fmt.Println("Error creating charge for LN address:", err)
+//	  return
+//	}
+//	fmt.Println("Charge details:", response.Data)
+func (c *Client) CreateChargeForLightningAddress(params CreateChargeFromLightningAddressOptionsType) (*FetchChargeFromLightningAddressDataResponseType, error) {
+	var res FetchChargeFromLightningAddressDataResponseType
+	err := c.MakeRequest("POST", "ln-address/fetch-charge", params, &res)
 	return &res, err
 }
 

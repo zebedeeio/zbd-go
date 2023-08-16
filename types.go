@@ -130,3 +130,74 @@ type StaticChargeDataResponseType struct {
 	} `json:"data"`
 	Message string `json:"message"`
 }
+
+type SendLightningAddressPaymentOptionsType struct {
+	LnAddress   string `json:"lnAddress"`
+	Amount      string `json:"amount"`
+	Comment     string `json:"comment"`
+	CallbackUrl string `json:"callbackUrl"`
+	InternalID  string `json:"internalId"`
+}
+
+type SendLightningAddressPaymentDataResponseType struct {
+	Data struct {
+		ID            string `json:"id"`
+		Fee           string `json:"fee"`
+		Unit          string `json:"unit"`
+		Amount        string `json:"amount"`
+		Invoice       string `json:"invoice"`
+		Preimage      string `json:"preimage"`
+		WalletID      string `json:"walletId"`
+		TransactionID string `json:"transactionId"`
+		CallbackUrl   string `json:"callbackUrl"`
+		InternalID    string `json:"internalId"`
+		Comment       string `json:"comment"`
+		ProcessedAt   string `json:"processedAt"`
+		CreatedAt     string `json:"createdAt"`
+		Status        string `json:"status"`
+	} `json:"data"`
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
+type ValidateLightningAddressDataResponseType struct {
+	Data struct {
+		Valid    bool `json:"valid"`
+		Metadata struct {
+			MinSendable    int    `json:"minSendable"`
+			MaxSendable    int    `json:"maxSendable"`
+			CommentAllowed int    `json:"commentAllowed"`
+			Tag            string `json:"tag"`
+			Metadata       string `json:"metadata"`
+			Callback       string `json:"callback"`
+			PayerData      struct {
+				Name struct {
+					Mandatory bool `json:"mandatory"`
+				} `json:"name"`
+				Identifier struct {
+					Mandatory bool `json:"mandatory"`
+				} `json:"identifier"`
+			} `json:"payerData"`
+			Disposable bool `json:"disposable"`
+		} `json:"metadata"`
+	} `json:"data"`
+	Success bool `json:"success"`
+}
+
+type CreateChargeFromLightningAddressOptionsType struct {
+	Amount      string `json:"amount"`
+	LNAddress   string `json:"lnaddress"`
+	Description string `json:"description"`
+}
+
+type FetchChargeFromLightningAddressDataResponseType struct {
+	Data struct {
+		LNAddress string `json:"lnaddress"`
+		Amount    string `json:"amount"`
+		Invoice   struct {
+			URI     string `json:"uri"`
+			Request string `json:"request"`
+		} `json:"invoice"`
+	} `json:"data"`
+	Success bool `json:"success"`
+}

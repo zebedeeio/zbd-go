@@ -354,3 +354,80 @@ func TestUpdateStaticCharge(t *testing.T) {
 		t.Errorf("Expected MaxAmount to be updated, got %s", response.Data.MaxAmount)
 	}
 }
+
+func TestSendLightningAddressPayment(t *testing.T) {
+
+	// Create payment options
+	paymentOptions := SendLightningAddressPaymentOptionsType{
+		LnAddress:   "andre@zbd.gg",
+		Amount:      "1000",
+		Comment:     "Payment for goods",
+		CallbackUrl: "https://example.com/payment-callback",
+		InternalID:  "payment123",
+	}
+
+	// Call the function being tested
+	response, err := client.SendLightningAddressPayment(paymentOptions)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error sending lightning address payment: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || response.Data.ID == "" {
+		t.Errorf("Expected valid response with payment ID, got nil or empty ID")
+	}
+
+}
+
+func TestValidateLightningAddress(t *testing.T) {
+	// Test valid lightning address
+	validAddress := "andre@zbd.gg"
+	response, err := client.ValidateLightningAddress(validAddress)
+	if err != nil {
+		t.Errorf("Error validating valid LN address: %v", err)
+		return
+	}
+
+	if !response.Data.Valid {
+		t.Errorf("Expected valid LN address, got invalid")
+	}
+
+	// Test invalid lightning address
+	invalidAddress := "invalidlnaddress"
+	response, err = client.ValidateLightningAddress(invalidAddress)
+	if err != nil {
+		t.Errorf("Error validating invalid LN address: %v", err)
+		return
+	}
+
+	if response.Data.Valid {
+		t.Errorf("Expected invalid LN address, got valid")
+	}
+
+}
+
+func TestCreateChargeForLightningAddress(t *testing.T) {
+	// Define charge parameters
+	chargeParams := CreateChargeFromLightningAddressOptionsType{
+		Amount:      "10000",
+		LNAddress:   "lnaddress123",
+		Description: "Charge for LN address",
+	}
+
+	// Call the function being tested
+	response, err := client.CreateChargeForLightningAddress(chargeParams)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error creating charge for LN address: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || response.Data.LNAddress != chargeParams.LNAddress {
+		t.Errorf("Expected valid response with matching LNAddress, got nil or mismatched LNAddress")
+	}
+}
