@@ -249,3 +249,30 @@ func TestDecodeCharge(t *testing.T) {
 		t.Errorf("unexpected unit value: %s", response.Data.Unit)
 	}
 }
+
+func TestCreateStaticCharge(t *testing.T) {
+
+	chargeOptions := StaticChargeOptionsType{
+		MinAmount:      "1000",
+		MaxAmount:      "50000",
+		Description:    "Sample charge",
+		InternalID:     "charge123",
+		CallbackURL:    "https://example.com/callback",
+		SuccessMessage: "Charge successful",
+	}
+	response, err := client.CreateStaticCharge(chargeOptions)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error creating static charge: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || response.Data.ID == "" {
+		t.Error("Expected valid response with charge ID, got nil or empty ID")
+	}
+
+	// Print the created charge ID for reference
+	t.Logf("Created Charge ID: %s", response.Data.ID)
+}

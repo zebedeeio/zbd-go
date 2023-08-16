@@ -120,6 +120,28 @@ func (c *Client) Charge(params *Charge) (*Charge, error) {
 	return params, err
 }
 
+// DecodeCharge decodes charge information using the provided invoice string.
+// It makes a POST request to the "/charges" API endpoint with the given parameters
+// and returns the decoded charge details.
+//
+// Parameters:
+//   - param: A pointer to a DecodeChargeOptionsType struct containing the invoice string.
+//
+// Returns:
+//   - A pointer to a DecodeChargeResponseType struct representing the decoded charge response.
+//   - An error if the request fails or an error occurs during response processing.
+//
+// Example:
+//
+//	client := NewClient(apiKey)
+//	invoice := "lnbc123456789" // Replace with the actual invoice
+//	options := &DecodeChargeOptionsType{Invoice: invoice}
+//	response, err := client.DecodeCharge(options)
+//	if err != nil {
+//	  fmt.Println("Error:", err)
+//	  return
+//	}
+//	fmt.Println("Decoded Charge:", response.Data)
 func (c *Client) DecodeCharge(param *DecodeChargeOptionsType) (*DecodeChargeResponseType, error) {
 	var res DecodeChargeResponseType
 	err := c.MakeRequest("POST", "/charges", param, &res)
@@ -138,6 +160,43 @@ func (c *Client) GetCharge(chargeID string) (*Charge, error) {
 	var charge Charge
 	err := c.MakeRequest("GET", "/charges/"+chargeID, nil, &charge)
 	return &charge, err
+}
+
+// Static charges endpoints
+
+// CreateStaticCharge creates a new static charge with the provided parameters.
+// It makes a POST request to the "/static-charges" API endpoint using the given parameters,
+// and returns the response containing the newly created static charge details.
+//
+// Parameters:
+//   - param: An instance of the StaticChargeOptionsType struct containing charge creation options.
+//
+// Returns:
+//   - A pointer to a StaticChargeDataResponseType struct representing the response
+//     containing the details of the newly created static charge.
+//   - An error if the request fails or an error occurs during response processing.
+//
+// Example:
+//
+//	client := NewClient(apiKey)
+//	chargeOptions := StaticChargeOptionsType{
+//	  MinAmount:      "1000", // Replace with desired values
+//	  MaxAmount:      "50000",
+//	  Description:    "Sample charge",
+//	  InternalID:     "charge123",
+//	  CallbackURL:    "https://example.com/callback",
+//	  SuccessMessage: "Charge successful",
+//	}
+//	response, err := client.CreateStaticCharge(chargeOptions)
+//	if err != nil {
+//	  fmt.Println("Error:", err)
+//	  return
+//	}
+//	fmt.Println("Created Charge ID:", response.Data.ID)
+func (c *Client) CreateStaticCharge(param StaticChargeOptionsType) (*StaticChargeDataResponseType, error) {
+	var res StaticChargeDataResponseType
+	err := c.MakeRequest("/POST", "/static-charges", param, &res)
+	return &res, err
 }
 
 // Create Withdrawal Request: https://api-reference.zebedee.io/#60cee894-009f-40dc-9cba-e9aec5ce8aa9

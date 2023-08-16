@@ -95,3 +95,38 @@ type DecodeChargeResponseType struct {
 	} `json:"data"`
 	Success bool `json:"success"`
 }
+
+type StaticChargeOptionsType struct {
+	AllowedSlots   *string `json:"allowedSlots"`
+	MinAmount      string  `json:"minAmount"`
+	MaxAmount      string  `json:"maxAmount"`
+	Description    string  `json:"description"`
+	InternalID     string  `json:"internalId"`
+	CallbackURL    string  `json:"callbackUrl"`
+	SuccessMessage string  `json:"successMessage"`
+}
+
+type StaticChargeDataResponseType struct {
+	Data struct {
+		ID             string  `json:"id"`
+		Unit           string  `json:"unit"`
+		Slots          string  `json:"slots"`
+		MinAmount      string  `json:"minAmount"`
+		MaxAmount      string  `json:"maxAmount"`
+		CreatedAt      string  `json:"createdAt"`
+		CallbackURL    string  `json:"callbackUrl"`
+		InternalID     string  `json:"internalId"`
+		Description    string  `json:"description"`
+		ExpiresAt      string  `json:"expiresAt"`
+		ConfirmedAt    string  `json:"confirmedAt"`
+		SuccessMessage string  `json:"successMessage"`
+		AllowedSlots   *string `json:"allowedSlots"`
+		Status         string  `json:"status"`
+		Fee            string  `json:"fee"`
+		Invoice        struct {
+			Request string `json:"request"`
+			URI     string `json:"uri"`
+		} `json:"invoice"`
+	} `json:"data"`
+	Message string `json:"message"`
+}
