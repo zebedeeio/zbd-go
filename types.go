@@ -75,3 +75,23 @@ type PeerPayment struct {
 	Comment     string    `json:"comment"`
 	Status      string    `json:"status"`
 }
+
+type DecodeChargeOptionsType struct {
+	Invoice string `json:"invoice"`
+}
+
+type DecodeChargeResponseType struct {
+	Data struct {
+		Unit                   string `json:"unit"`
+		Status                 string `json:"status"`
+		Amount                 string `json:"amount"`
+		CreatedAt              string `json:"createdAt"`
+		InternalId             string `json:"internalId"`
+		CallbackUrl            string `json:"callbackUrl"`
+		Description            string `json:"description"`
+		InvoiceRequest         string `json:"invoiceRequest"`
+		InvoiceExpiresAt       string `json:"invoiceExpiresAt"`
+		InvoiceDescriptionHash string `json:"invoiceDescriptionHash,omitempty"`
+	} `json:"data"`
+	Success bool `json:"success"`
+}

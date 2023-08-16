@@ -11,18 +11,38 @@ import (
 	"time"
 )
 
+type ZBDOauth struct {
+	ClientID    string
+	Secret      string
+	RedirectURI string
+	State       string
+	Scope       string
+}
+
 // BaseURL is https://api.zebedee.io/v0 by default.
 type Client struct {
 	BaseURL    string
 	APIKey     string
 	HttpClient *http.Client
+	Oauth      *ZBDOauth
 }
 
-func New(apikey string) *Client {
+func New(apikey string, oauth *ZBDOauth) *Client {
 	return &Client{
 		BaseURL:    "https://api.zebedee.io/v0",
 		APIKey:     apikey,
 		HttpClient: &http.Client{},
+		Oauth:      oauth,
+	}
+}
+
+func NewOauth(client_id string, secret string, redirect_uri string, state string, scope string) *ZBDOauth {
+	return &ZBDOauth{
+		ClientID:    client_id,
+		Secret:      secret,
+		RedirectURI: redirect_uri,
+		State:       state,
+		Scope:       scope,
 	}
 }
 
@@ -98,6 +118,12 @@ func (c *Client) Wallet() (*Wallet, error) {
 func (c *Client) Charge(params *Charge) (*Charge, error) {
 	err := c.MakeRequest("POST", "/charges", params, params)
 	return params, err
+}
+
+func (c *Client) DecodeCharge(param *DecodeChargeOptionsType) (*DecodeChargeResponseType, error) {
+	var res DecodeChargeResponseType
+	err := c.MakeRequest("POST", "/charges", param, &res)
+	return &res, err
 }
 
 // Get All Charges: https://api-reference.zebedee.io/#cdb9c0d1-76e5-4949-9bb8-e8a52d6aaed3

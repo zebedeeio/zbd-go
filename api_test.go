@@ -10,7 +10,7 @@ import (
 var client *Client
 
 func TestMain(m *testing.M) {
-	client = New("edg7SOTFWbh1FbjVecbmZi4G4nYVHJj2")
+	client = New("edg7SOTFWbh1FbjVecbmZi4G4nYVHJj2", nil)
 	client.BaseURL = "https://dev.zebedee.io/v0"
 	m.Run()
 }
@@ -24,7 +24,7 @@ func TestWallet(t *testing.T) {
 }
 
 func TestBadAuth(t *testing.T) {
-	badClient := New("invalidkey")
+	badClient := New("invalidkey", nil)
 	badClient.BaseURL = "https://dev.zebedee.io/v0"
 
 	_, err := badClient.Wallet()
@@ -230,5 +230,22 @@ func TestPaymentsBad(t *testing.T) {
 	})
 	if err == nil {
 		t.Errorf(".Pay() should have returned an error")
+	}
+}
+
+func TestDecodeCharge(t *testing.T) {
+	response, err := client.DecodeCharge(&DecodeChargeOptionsType{
+		Invoice: "An invoice",
+	})
+
+	if err != nil {
+		t.Errorf("got error from .DecodeCharge(): %v", err)
+	}
+
+	if !response.Success {
+		t.Errorf("unexpected success value: %v", response.Success)
+	}
+	if response.Data.Unit != "BTC" {
+		t.Errorf("unexpected unit value: %s", response.Data.Unit)
 	}
 }
