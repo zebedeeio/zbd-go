@@ -20,6 +20,6 @@ func GetPublicGamertagData(gamertag string) (*PublicUser, error) {
 	}
 
 	var pu PublicUser
-	err := client.MakeRequest("GET", "/user/"+gamertag, nil, &pu)
+	err := client.MakeRequest("GET", "/user/"+gamertag, nil, &pu, nil)
 	return &pu, err
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -25,6 +26,26 @@ type Client struct {
 	APIKey     string
 	HttpClient *http.Client
 	Oauth      *ZBDOauth
+}
+
+func newFetchTokenBody(c *Client, code string, codeVerifier string) FetchTokenBody {
+	return FetchTokenBody{
+		ClientID:     c.Oauth.ClientID,
+		ClientSecret: c.Oauth.Secret,
+		Code:         code,
+		CodeVerifier: codeVerifier,
+		GrantType:    "authorization_code",
+		RedirectURI:  c.Oauth.RedirectURI,
+	}
+}
+
+func newFetchRefresh(c *Client, refreshToken string) FetchRefresh {
+	return FetchRefresh{
+		ClientID:     c.Oauth.ClientID,
+		ClientSecret: c.Oauth.Secret,
+		RefreshToken: refreshToken,
+		GrantType:    "refresh_token",
+	}
 }
 
 func New(apikey string, oauth *ZBDOauth) *Client {
@@ -57,6 +78,7 @@ func (c *Client) MakeRequest(
 	path string,
 	content interface{},
 	response interface{},
+	headers http.Header,
 ) error {
 	body := &bytes.Buffer{}
 	if content != nil {
@@ -70,6 +92,13 @@ func (c *Client) MakeRequest(
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("apikey", c.APIKey)
+	if headers != nil {
+		for key, values := range headers {
+			for _, value := range values {
+				req.Header.Add(key, value)
+			}
+		}
+	}
 
 	resp, err := c.HttpClient.Do(req)
 	if err != nil {
@@ -106,7 +135,7 @@ func (c *Client) MakeRequest(
 
 func (c *Client) Wallet() (*Wallet, error) {
 	var wallet Wallet
-	err := c.MakeRequest("GET", "/wallet", nil, &wallet)
+	err := c.MakeRequest("GET", "/wallet", nil, &wallet, nil)
 	return &wallet, err
 }
 
@@ -116,7 +145,7 @@ func (c *Client) Wallet() (*Wallet, error) {
 // {ExpiresIn, Amount, Description, InternalID, CallbackURL}
 // and overwrites that with the response.
 func (c *Client) Charge(params *Charge) (*Charge, error) {
-	err := c.MakeRequest("POST", "/charges", params, params)
+	err := c.MakeRequest("POST", "/charges", params, params, nil)
 	return params, err
 }
 
@@ -144,21 +173,21 @@ func (c *Client) Charge(params *Charge) (*Charge, error) {
 //	fmt.Println("Decoded Charge:", response.Data)
 func (c *Client) DecodeCharge(param *DecodeChargeOptionsType) (*DecodeChargeResponseType, error) {
 	var res DecodeChargeResponseType
-	err := c.MakeRequest("POST", "/charges", param, &res)
+	err := c.MakeRequest("POST", "/charges", param, &res, nil)
 	return &res, err
 }
 
 // Get All Charges: https://api-reference.zebedee.io/#cdb9c0d1-76e5-4949-9bb8-e8a52d6aaed3
 func (c *Client) ListCharges() ([]Charge, error) {
 	var charges []Charge
-	err := c.MakeRequest("GET", "/charges", nil, &charges)
+	err := c.MakeRequest("GET", "/charges", nil, &charges, nil)
 	return charges, err
 }
 
 // Get Charge Details: https://api-reference.zebedee.io/#a5a2d24c-2a38-44d0-bc00-57598066f1f2
 func (c *Client) GetCharge(chargeID string) (*Charge, error) {
 	var charge Charge
-	err := c.MakeRequest("GET", "/charges/"+chargeID, nil, &charge)
+	err := c.MakeRequest("GET", "/charges/"+chargeID, nil, &charge, nil)
 	return &charge, err
 }
 
@@ -195,7 +224,7 @@ func (c *Client) GetCharge(chargeID string) (*Charge, error) {
 //	fmt.Println("Created Charge ID:", response.Data.ID)
 func (c *Client) CreateStaticCharge(param StaticChargeOptionsType) (*StaticChargeDataResponseType, error) {
 	var res StaticChargeDataResponseType
-	err := c.MakeRequest("POST", "/static-charges", param, &res)
+	err := c.MakeRequest("POST", "/static-charges", param, &res, nil)
 	return &res, err
 }
 
@@ -222,7 +251,7 @@ func (c *Client) CreateStaticCharge(param StaticChargeOptionsType) (*StaticCharg
 //	fmt.Println("Static charge data:", response.Data)
 func (c *Client) GetStaticCharge(staticChargeID string) (*StaticChargeDataResponseType, error) {
 	var res StaticChargeDataResponseType
-	err := c.MakeRequest("GET", "/static-charges/"+staticChargeID, nil, &res)
+	err := c.MakeRequest("GET", "/static-charges/"+staticChargeID, nil, &res, nil)
 	return &res, err
 }
 
@@ -258,7 +287,7 @@ func (c *Client) GetStaticCharge(staticChargeID string) (*StaticChargeDataRespon
 //	fmt.Println("Updated static charge data:", updatedCharge.Data)
 func (c *Client) UpdateStaticCharge(staticChargeID string, param StaticChargeOptionsType) (*StaticChargeDataResponseType, error) {
 	var res StaticChargeDataResponseType
-	err := c.MakeRequest("PATCH", "/static-charges/"+staticChargeID, param, &res)
+	err := c.MakeRequest("PATCH", "/static-charges/"+staticChargeID, param, &res, nil)
 	return &res, err
 }
 
@@ -293,7 +322,7 @@ func (c *Client) UpdateStaticCharge(staticChargeID string, param StaticChargeOpt
 //	fmt.Println("Payment ID:", paymentResponse.Data.ID)
 func (c *Client) SendLightningAddressPayment(param SendLightningAddressPaymentOptionsType) (*SendLightningAddressPaymentDataResponseType, error) {
 	var res SendLightningAddressPaymentDataResponseType
-	err := c.MakeRequest("POST", "/ln-address/send-payment/", param, &res)
+	err := c.MakeRequest("POST", "/ln-address/send-payment/", param, &res, nil)
 	return &res, err
 }
 
@@ -323,7 +352,7 @@ func (c *Client) SendLightningAddressPayment(param SendLightningAddressPaymentOp
 //	fmt.Println("LN address validation result:", response.Data.Valid)
 func (c *Client) ValidateLightningAddress(lightningAddress string) (*ValidateLightningAddressDataResponseType, error) {
 	var res ValidateLightningAddressDataResponseType
-	err := c.MakeRequest("GET", "/ln-address/validate/"+lightningAddress, nil, &res)
+	err := c.MakeRequest("GET", "/ln-address/validate/"+lightningAddress, nil, &res, nil)
 	return &res, err
 }
 
@@ -357,7 +386,7 @@ func (c *Client) ValidateLightningAddress(lightningAddress string) (*ValidateLig
 //	fmt.Println("Charge details:", response.Data)
 func (c *Client) CreateChargeForLightningAddress(params CreateChargeFromLightningAddressOptionsType) (*FetchChargeFromLightningAddressDataResponseType, error) {
 	var res FetchChargeFromLightningAddressDataResponseType
-	err := c.MakeRequest("POST", "/ln-address/fetch-charge", params, &res)
+	err := c.MakeRequest("POST", "/ln-address/fetch-charge", params, &res, nil)
 	return &res, err
 }
 
@@ -393,7 +422,7 @@ func (c *Client) CreateChargeForLightningAddress(params CreateChargeFromLightnin
 //	fmt.Println("Keysend payment details:", response.Data)
 func (c *Client) SendKeysendPayment(params KeysendOptionsType) (*KeysendDataResponseType, error) {
 	var res KeysendDataResponseType
-	err := c.MakeRequest("POST", "/keysend-payment", params, &res)
+	err := c.MakeRequest("POST", "/keysend-payment", params, &res, nil)
 	return &res, err
 }
 
@@ -410,17 +439,17 @@ func (c *Client) SendKeysendPayment(params KeysendOptionsType) (*KeysendDataResp
 //   - error: An error if the API request or response handling encounters issues.
 //
 // Example usage:
-//   response, err := client.GetBtcUsdExchangeRate()
-//   if err != nil {
-//     fmt.Println("Error fetching BTC to USD exchange rate:", err)
-//     return
-//   }
-//   fmt.Printf("BTC to USD exchange rate: %s\n", response.Data.BTCUSDPrice)
-//   fmt.Printf("Exchange rate timestamp: %s\n", response.Data.BTCUSDTimestamp)
-
+//
+//	response, err := client.GetBtcUsdExchangeRate()
+//	if err != nil {
+//	  fmt.Println("Error fetching BTC to USD exchange rate:", err)
+//	  return
+//	}
+//	fmt.Printf("BTC to USD exchange rate: %s\n", response.Data.BTCUSDPrice)
+//	fmt.Printf("Exchange rate timestamp: %s\n", response.Data.BTCUSDTimestamp)
 func (c *Client) GetBTCUSDExchangeRate() (*BTCUSDDataResponseType, error) {
 	var res BTCUSDDataResponseType
-	err := c.MakeRequest("GET", "/btcusd", nil, &res)
+	err := c.MakeRequest("GET", "/btcusd", nil, &res, nil)
 	return &res, err
 }
 
@@ -448,7 +477,7 @@ func (c *Client) GetBTCUSDExchangeRate() (*BTCUSDDataResponseType, error) {
 //	fmt.Println("Is supported region:", response.Data.IsSupported)
 func (c *Client) IsSupportedRegion(ipAddress string) (*SupportedRegionDataResponseType, error) {
 	var res SupportedRegionDataResponseType
-	err := c.MakeRequest("GET", "/is-supported-region/"+ipAddress, nil, &res)
+	err := c.MakeRequest("GET", "/is-supported-region/"+ipAddress, nil, &res, nil)
 	return &res, err
 }
 
@@ -462,16 +491,16 @@ func (c *Client) IsSupportedRegion(ipAddress string) (*SupportedRegionDataRespon
 //   - error: An error if the API request or response handling encounters issues.
 //
 // Example usage:
-//   response, err := client.GetZBDProdIps()
-//   if err != nil {
-//     fmt.Println("Error fetching ZBD production IPs:", err)
-//     return
-//   }
-//   fmt.Println("ZBD production IPs:", response.Data.IPS)
-
+//
+//	response, err := client.GetZBDProdIps()
+//	if err != nil {
+//	  fmt.Println("Error fetching ZBD production IPs:", err)
+//	  return
+//	}
+//	fmt.Println("ZBD production IPs:", response.Data.IPS)
 func (c *Client) GetZBDProdIps() (*ProdIPSDataResponseType, error) {
 	var res ProdIPSDataResponseType
-	err := c.MakeRequest("GET", "/prod-ips", nil, &res)
+	err := c.MakeRequest("GET", "/prod-ips", nil, &res, nil)
 	return &res, err
 }
 
@@ -485,28 +514,191 @@ func (c *Client) GetZBDProdIps() (*ProdIPSDataResponseType, error) {
 //
 // Parameters:
 //   - param: InternalTransferOptionsType containing the required parameters for the internal transfer.
-//            This includes the amount to transfer and the receiver wallet ID.
+//     This includes the amount to transfer and the receiver wallet ID.
 //
 // Returns:
 //   - *InternalTransferDataResponseType: A pointer to the response containing details about the internal transfer.
 //   - error: An error if the API request or response handling encounters issues.
 //
 // Example usage:
-//   transferParams := InternalTransferOptionsType{
-//     Amount:           "5000",
-//     ReceiverWalletId: "receiver-wallet-id",
-//   }
-//   response, err := client.InternalTransfer(transferParams)
-//   if err != nil {
-//     fmt.Println("Error initiating internal transfer:", err)
-//     return
-//   }
-//   fmt.Println("Internal transfer details:", response.Data)
-
+//
+//	transferParams := InternalTransferOptionsType{
+//	  Amount:           "5000",
+//	  ReceiverWalletId: "receiver-wallet-id",
+//	}
+//	response, err := client.InternalTransfer(transferParams)
+//	if err != nil {
+//	  fmt.Println("Error initiating internal transfer:", err)
+//	  return
+//	}
+//	fmt.Println("Internal transfer details:", response.Data)
 func (c *Client) InternalTransfer(param InternalTransferOptionsType) (*InternalTransferDataResponseType, error) {
 	var res InternalTransferDataResponseType
-	err := c.MakeRequest("POST", "/internal-transfer", param, &res)
+	err := c.MakeRequest("POST", "/internal-transfer", param, &res, nil)
 	return &res, err
+}
+
+// OAuth functions
+
+// CreateAuthUrl generates an authorization URL for OAuth2 authentication.
+//
+// This function constructs an authorization URL using the provided client configuration
+// and generates a state, code verifier, and code challenge for use in the OAuth2 flow.
+//
+// Returns:
+//   - string: The authorization URL that users can visit to initiate the OAuth2 flow.
+//   - error: An error if there's an issue generating the authorization URL.
+//
+// Example usage:
+//
+//	oauth := NewOauth("your_client_id", "your_secret", "your_redirect_uri", "your_state", "your_scope")
+//	client := New("your_api_key", oauth)
+//	authURL, err := client.CreateAuthUrl()
+//	if err != nil {
+//	  fmt.Println("Error generating auth URL:", err)
+//	  return
+//	}
+//	fmt.Println("Authorization URL:", authURL)
+func (c *Client) CreateAuthUrl() (string, error) {
+	state := RandomString(30)
+	codeVerifier := RandomString(43)
+	codeChallenge, _ := S256Challenge(codeVerifier)
+	codeChallengeMethod := "S256"
+
+	baseURL, _ := url.Parse(c.BaseURL)
+	baseURL.Path = "/v1/oauth2/authorize"
+	values := url.Values{}
+	values.Add("client_id", c.Oauth.ClientID)
+	values.Add("response_type", "code")
+	values.Add("redirect_uri", c.Oauth.RedirectURI)
+	values.Add("code_challenge_method", codeChallengeMethod)
+	values.Add("code_challenge", codeChallenge)
+	values.Add("scope", c.Oauth.Scope)
+	values.Add("state", state)
+
+	baseURL.RawQuery = values.Encode()
+	authURL := baseURL.String()
+
+	return authURL, nil
+}
+
+// FetchToken retrieves an access token from the OAuth2 authorization code.
+//
+// This function makes a POST request to the API's "/v1/oauth2/token" endpoint using the provided
+// authorization code to exchange it for an access token.
+//
+// Parameters:
+//   - code: The authorization code obtained from the OAuth2 authorization process.
+//
+// Returns:
+//   - FetchAccessTokenRes: The response containing the fetched access token and related information.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//
+//	code := "authorization-code-obtained-from-authorization-process"
+//	tokenResponse, err := client.FetchToken(code)
+//	if err != nil {
+//	  fmt.Println("Error fetching access token:", err)
+//	  return
+//	}
+//	fmt.Println("Access Token:", tokenResponse.AccessToken)
+//	fmt.Println("Expires In:", tokenResponse.ExpiresIn)
+//	// Handle other token response data
+func (c *Client) FetchToken(code string) (FetchAccessTokenRes, error) {
+	var res FetchAccessTokenRes
+	codeVerifier := RandomString(43)
+	_, verifier := S256Challenge(codeVerifier)
+	body := newFetchTokenBody(c, code, verifier)
+	err := c.MakeRequest("POST", "/v1/oauth2/token", body, &res, nil)
+	return res, err
+}
+
+// RefreshToken refreshes an access token using a refresh token.
+//
+// This function makes a POST request to the API's "/v1/oauth2/token" endpoint
+// using the provided refresh token to request a new access token.
+//
+// Parameters:
+//   - refreshToken: The refresh token used to obtain a new access token.
+//
+// Returns:
+//   - FetchPostRes: The response containing the refreshed access token details.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//
+//	refreshToken := "your-refresh-token"
+//	response, err := client.RefreshToken(refreshToken)
+//	if err != nil {
+//	  fmt.Println("Error refreshing access token:", err)
+//	  return
+//	}
+//	fmt.Println("Refreshed access token:", response.AccessToken)
+func (c *Client) RefreshToken(refreshToken string) (FetchPostRes, error) {
+	var res FetchPostRes
+	body := newFetchRefresh(c, refreshToken)
+	err := c.MakeRequest("POST", "/v1/oauth2/token", body, &res, nil)
+	return res, err
+}
+
+// GetUserData retrieves user data using the provided user token.
+//
+// This function makes a GET request to the API's "/v1/oauth2/user" endpoint
+// to fetch user data for the authenticated user.
+//
+// Parameters:
+//   - token: A string containing the user token.
+//
+// Returns:
+//   - ZBDUserData: The user data fetched from the API.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//
+//	userData, err := client.GetUserData("user-token-here")
+//	if err != nil {
+//	  fmt.Println("Error fetching user data:", err)
+//	  return
+//	}
+//	fmt.Println("User data:", userData)
+func (c *Client) GetUserData(token string) (ZBDUserData, error) {
+	var res ZBDUserData
+	headers := make(http.Header)
+	headers.Set("usertoken", token)
+
+	err := c.MakeRequest("GET", "/v1/oauth2/user", nil, &res, headers)
+
+	return res, err
+}
+
+// GetUserWalletData retrieves the wallet data for the authenticated user.
+//
+// This function makes a GET request to the API's "/v1/oauth2/wallet" endpoint using the provided
+// user token in the headers to retrieve the wallet data for the authenticated user.
+//
+// Parameters:
+//   - token: The user token used to authenticate the request.
+//
+// Returns:
+//   - ZBDUserWalletData: The wallet data for the authenticated user.
+//   - error: An error if the API request or response handling encounters issues.
+//
+// Example usage:
+//
+//	walletData, err := client.GetUserWalletData("user-token-here")
+//	if err != nil {
+//	  fmt.Println("Error fetching user wallet data:", err)
+//	  return
+//	}
+//	fmt.Println("Wallet balance:", walletData.Balance)
+func (c *Client) GetUserWalletData(token string) (ZBDUserWalletData, error) {
+	var res ZBDUserWalletData
+	headers := make(http.Header)
+	headers.Set("usertoken", token)
+
+	err := c.MakeRequest("GET", "/v1/oauth2/wallet", nil, &res, headers)
+	return res, err
 }
 
 // Create Withdrawal Request: https://api-reference.zebedee.io/#60cee894-009f-40dc-9cba-e9aec5ce8aa9
@@ -514,21 +706,21 @@ func (c *Client) InternalTransfer(param InternalTransferOptionsType) (*InternalT
 // Takes an WithdrawalRequest object containing only
 // {expiresIn, Amount, Description, InternalID, CallbackURL}
 func (c *Client) WithdrawalRequest(params *WithdrawalRequest) (*WithdrawalRequest, error) {
-	err := c.MakeRequest("POST", "/withdrawal-requests", params, params)
+	err := c.MakeRequest("POST", "/withdrawal-requests", params, params, nil)
 	return params, err
 }
 
 // Get All Withdrawal Requests: https://api-reference.zebedee.io/#bc59c1da-4d5a-49c6-937f-f95d71c940c6
 func (c *Client) ListWithdrawalRequests() ([]WithdrawalRequest, error) {
 	var wr []WithdrawalRequest
-	err := c.MakeRequest("GET", "/withdrawal-requests", nil, &wr)
+	err := c.MakeRequest("GET", "/withdrawal-requests", nil, &wr, nil)
 	return wr, err
 }
 
 // Get Withdrawal Request Details: https://api-reference.zebedee.io/#12aea552-0b8d-4562-a84b-a890d4f17a32
 func (c *Client) GetWithdrawalRequest(wrequestID string) (*WithdrawalRequest, error) {
 	var wr WithdrawalRequest
-	err := c.MakeRequest("GET", "/withdrawal-requests/"+wrequestID, nil, &wr)
+	err := c.MakeRequest("GET", "/withdrawal-requests/"+wrequestID, nil, &wr, nil)
 	return &wr, err
 }
 
@@ -537,21 +729,21 @@ func (c *Client) GetWithdrawalRequest(wrequestID string) (*WithdrawalRequest, er
 // Takes a Payment object containing only {Description, InternalID, Invoice}
 // and overwrites that with the response.
 func (c *Client) Pay(params *Payment) (*Payment, error) {
-	err := c.MakeRequest("POST", "/payments", params, params)
+	err := c.MakeRequest("POST", "/payments", params, params, nil)
 	return params, err
 }
 
 // Get All Payments: https://api-reference.zebedee.io/#08ea69cc-dd6f-4381-a489-18004b911f96
 func (c *Client) ListPayments() ([]Payment, error) {
 	var payments []Payment
-	err := c.MakeRequest("GET", "/payments", nil, &payments)
+	err := c.MakeRequest("GET", "/payments", nil, &payments, nil)
 	return payments, err
 }
 
 // Get Payment Details: https://api-reference.zebedee.io/#244ebe9f-6c4d-4162-a805-9a0e8955b20d
 func (c *Client) GetPayment(paymentID string) (*Payment, error) {
 	var payment Payment
-	err := c.MakeRequest("GET", "/payments/"+paymentID, nil, &payment)
+	err := c.MakeRequest("GET", "/payments/"+paymentID, nil, &payment, nil)
 	return &payment, err
 }
 
@@ -562,14 +754,14 @@ func (c *Client) SendGamertagPayment(gamertag, amount, description string) (*Pee
 		Gamertag    string `json:"gamertag"`
 		Amount      string `json:"amount"`
 		Description string `json:"description"`
-	}{gamertag, amount, description}, &payment)
+	}{gamertag, amount, description}, &payment, nil)
 	return &payment, err
 }
 
 // Fetch Gamertag Transaction Details By ID: https://api-reference.zebedee.io/#80571b36-eac4-4966-9c49-1b83d0ae466e
 func (c *Client) FetchGamerTagTransaction(transactionID string) (*PeerPayment, error) {
 	var payment PeerPayment
-	err := c.MakeRequest("GET", "/gamertag/transaction/"+transactionID, nil, &payment)
+	err := c.MakeRequest("GET", "/gamertag/transaction/"+transactionID, nil, &payment, nil)
 	return &payment, err
 }
 
@@ -578,7 +770,7 @@ func (c *Client) FetchUserIDFromGamertag(gamertag string) (string, error) {
 	var data struct {
 		ID string `json:"id"`
 	}
-	err := c.MakeRequest("GET", "/user-id/gamertag/"+gamertag, nil, &data)
+	err := c.MakeRequest("GET", "/user-id/gamertag/"+gamertag, nil, &data, nil)
 	return data.ID, err
 }
 
@@ -587,7 +779,7 @@ func (c *Client) FetchGamertagFromUserID(userID string) (string, error) {
 	var data struct {
 		Gamertag string `json:"gamertag"`
 	}
-	err := c.MakeRequest("GET", "/gamertag/user-id/"+userID, nil, &data)
+	err := c.MakeRequest("GET", "/gahttps://github.com/pocketbase/pocketbase/toolsmertag/user-id/"+userID, nil, &data, nil)
 	return data.Gamertag, err
 }
 
@@ -608,7 +800,7 @@ func (c *Client) CreateGamertagCharge(gamertag, amount, description string) (*Ch
 		Gamertag    string `json:"gamertag"`
 		Amount      string `json:"amount"`
 		Description string `json:"description"`
-	}{gamertag, amount, description}, &data)
+	}{gamertag, amount, description}, &data, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -641,6 +833,6 @@ func (c *Client) GetProductionIPs() ([]string, error) {
 	var ips struct {
 		IPs []string `json:"ips"`
 	}
-	err := c.MakeRequest("GET", "/prod-ips", nil, &ips)
+	err := c.MakeRequest("GET", "/prod-ips", nil, &ips, nil)
 	return ips.IPs, err
 }

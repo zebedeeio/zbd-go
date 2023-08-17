@@ -277,3 +277,60 @@ type InternalTransferOptionsType struct {
 	Amount           string `json:"amount"`
 	ReceiverWalletId string `json:"receiverWalletId"`
 }
+
+type FetchAccessTokenRes struct {
+	AccessToken           string `json:"accessToken"`
+	TokenType             string `json:"tokenType"`
+	ExpiresIn             uint32 `json:"expiresTn"`
+	RefreshToken          string `json:"refreshToken"`
+	RefreshTokenExpiresIn uint32 `json:"refreshTokenExpiresTn"`
+	Scope                 string `json:"scope"`
+}
+
+type FetchTokenBody struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	Code         string `json:"code"`
+	CodeVerifier string `json:"code_verifier"`
+	GrantType    string `json:"grant_type"`
+	RedirectURI  string `json:"redirect_uri"`
+}
+
+type FetchPostRes struct {
+	AccessToken  string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    uint32 `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
+	Scope        string `json:"scope"`
+}
+
+type FetchRefresh struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	RefreshToken string `json:"refresh_token"`
+	GrantType    string `json:"grant_type"`
+	RedirectURI  string `json:"redirect_uri"`
+}
+
+type ZBDUserData struct {
+	ID                 string `json:"id"`
+	Email              string `json:"email"`
+	Gamertag           string `json:"gamertag"`
+	Image              string `json:"image,omitempty"`
+	IsVerified         bool   `json:"isVerified"`
+	LightningAddress   string `json:"lightningAddress"`
+	PublicBio          string `json:"publicBio"`
+	PublicStaticCharge string `json:"publicStaticCharge"`
+}
+
+type ZBDUserWalletData struct {
+	Balance               string                  `json:"balance"`
+	RemainingAmountLimits ZBDUserWalletDataLimits `json:"remainingAmountLimits"`
+}
+
+type ZBDUserWalletDataLimits struct {
+	Daily     string `json:"daily"`
+	MaxCredit string `json:"maxCredit"`
+	Monthly   string `json:"monthly"`
+	Weekly    string `json:"weekly"`
+}

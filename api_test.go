@@ -11,7 +11,8 @@ import (
 var client *Client
 
 func TestMain(m *testing.M) {
-	client = New("edg7SOTFWbh1FbjVecbmZi4G4nYVHJj2", nil)
+	oauth := NewOauth("your_client_id", "your_secret", "your_redirect_uri", "your_state", "your_scope")
+	client = New("edg7SOTFWbh1FbjVecbmZi4G4nYVHJj2", oauth)
 	client.BaseURL = "https://dev.zebedee.io/v0"
 	m.Run()
 }
@@ -539,5 +540,134 @@ func TestInternalTransfer(t *testing.T) {
 	expectedSuccessMessage := "was a good transfer but it shouldnt be"
 	if !strings.Contains(response.Message, expectedSuccessMessage) {
 		t.Errorf("Expected success message to contain \"%s\", got \"%s\"", expectedSuccessMessage, response.Message)
+	}
+}
+
+func TestCreateAuthUrl(t *testing.T) {
+	oauth := NewOauth("your_client_id", "your_secret", "your_redirect_uri", "your_state", "your_scope")
+	client := New("your_api_key", oauth)
+
+	authURL, err := client.CreateAuthUrl()
+	if err != nil {
+		t.Errorf("Error creating auth URL: %v", err)
+		return
+	}
+
+	// Perform any validation you need on the authURL here
+	if len(authURL) == 0 {
+		t.Errorf("Generated auth URL is empty")
+	}
+
+	t.Logf("Generated auth URL: %s", authURL)
+}
+
+func TestFetchToken(t *testing.T) {
+	oauth := NewOauth("your_client_id", "your_secret", "your_redirect_uri", "your_state", "your_scope")
+	client = New("edg7SOTFWbh1FbjVecbmZi4G4nYVHJj2", oauth)
+	client.BaseURL = "https://dev.zebedee.io/v0"
+	// Mock a successful response
+	Response := FetchAccessTokenRes{
+		AccessToken:           "your-access-token",
+		TokenType:             "bearer",
+		ExpiresIn:             3600,
+		RefreshToken:          "your-refresh-token",
+		RefreshTokenExpiresIn: 7200,
+		Scope:                 "your-scope",
+	}
+
+	// Call the function being tested
+	code := "your-authorization-code"
+	response, err := client.FetchToken(code)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error fetching access token: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response.AccessToken != Response.AccessToken {
+		t.Errorf("Expected access token '%s', but got '%s'", Response.AccessToken, response.AccessToken)
+	}
+}
+
+func TestRefreshToken(t *testing.T) {
+	oauth := NewOauth("your_client_id", "your_secret", "your_redirect_uri", "your_state", "your_scope")
+	client = New("edg7SOTFWbh1FbjVecbmZi4G4nYVHJj2", oauth)
+	client.BaseURL = "https://dev.zebedee.io/v0"
+
+	Response := FetchPostRes{
+		AccessToken:  "new-access-token",
+		TokenType:    "bearer",
+		ExpiresIn:    3600,
+		RefreshToken: "new-refresh-token",
+		Scope:        "your-scope",
+	}
+
+	// Call the function being tested
+	fakeRefreshToken := "xxx11xx1-xxxx-xxxx-xxx1-1xx11xx111xx"
+	response, err := client.FetchToken(fakeRefreshToken)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error refreshing token: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response.AccessToken != Response.AccessToken {
+		t.Errorf("Expected access token '%s', but got '%s'", Response.AccessToken, response.AccessToken)
+	}
+}
+
+func TestGetUserData(t *testing.T) {
+	Response := ZBDUserData{
+		ID:                 "user-id",
+		Email:              "user@example.com",
+		Gamertag:           "user123",
+		Image:              "user-avatar-url",
+		IsVerified:         true,
+		LightningAddress:   "lnaddress123",
+		PublicBio:          "User's public bio",
+		PublicStaticCharge: "staticcharge123",
+	}
+
+	userData, err := client.GetUserData("user-token-here")
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error fetching user data: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if userData.ID != Response.ID {
+		t.Errorf("Expected user ID '%s', but got '%s'", Response.ID, userData.ID)
+	}
+
+}
+
+func TestGetUserWalletData(t *testing.T) {
+	Response := ZBDUserWalletData{
+		Balance: "10000",
+		RemainingAmountLimits: ZBDUserWalletDataLimits{
+			Daily:     "5000",
+			MaxCredit: "20000",
+			Monthly:   "30000",
+			Weekly:    "10000",
+		},
+	}
+
+	walletData, err := client.GetUserWalletData("user-token-here")
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error fetching user wallet data: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if walletData.Balance != Response.Balance {
+		t.Errorf("Expected wallet balance '%s', but got '%s'", Response.Balance, walletData.Balance)
 	}
 }
