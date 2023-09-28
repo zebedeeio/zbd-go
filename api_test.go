@@ -1,6 +1,7 @@
 package zebedee
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 	"testing"
@@ -10,7 +11,8 @@ import (
 var client *Client
 
 func TestMain(m *testing.M) {
-	client = New("edg7SOTFWbh1FbjVecbmZi4G4nYVHJj2")
+	oauth := NewOauth("your_client_id", "your_secret", "your_redirect_uri", "your_state", "your_scope")
+	client = New("edg7SOTFWbh1FbjVecbmZi4G4nYVHJj2", oauth)
 	client.BaseURL = "https://dev.zebedee.io/v0"
 	m.Run()
 }
@@ -24,7 +26,7 @@ func TestWallet(t *testing.T) {
 }
 
 func TestBadAuth(t *testing.T) {
-	badClient := New("invalidkey")
+	badClient := New("invalidkey", nil)
 	badClient.BaseURL = "https://dev.zebedee.io/v0"
 
 	_, err := badClient.Wallet()
@@ -230,5 +232,442 @@ func TestPaymentsBad(t *testing.T) {
 	})
 	if err == nil {
 		t.Errorf(".Pay() should have returned an error")
+	}
+}
+
+func TestDecodeCharge(t *testing.T) {
+	response, err := client.DecodeCharge(&DecodeChargeOptionsType{
+		Invoice: "An invoice",
+	})
+
+	if err != nil {
+		t.Errorf("got error from .DecodeCharge(): %v", err)
+	}
+
+	if !response.Success {
+		t.Errorf("unexpected success value: %v", response.Success)
+	}
+	if response.Data.Unit != "BTC" {
+		t.Errorf("unexpected unit value: %s", response.Data.Unit)
+	}
+}
+
+func TestCreateStaticCharge(t *testing.T) {
+
+	chargeOptions := StaticChargeOptionsType{
+		MinAmount:      "1000",
+		MaxAmount:      "50000",
+		Description:    "Sample charge",
+		InternalID:     "charge123",
+		CallbackURL:    "https://example.com/callback",
+		SuccessMessage: "Charge successful",
+	}
+	response, err := client.CreateStaticCharge(chargeOptions)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error creating static charge: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || response.Data.ID == "" {
+		t.Error("Expected valid response with charge ID, got nil or empty ID")
+	}
+
+	// Print the created charge ID for reference
+	t.Logf("Created Charge ID: %s", response.Data.ID)
+}
+
+func TestGetStaticCharge(t *testing.T) {
+
+	// Create a static charge to retrieve its ID for testing
+	chargeOptions := StaticChargeOptionsType{
+		MinAmount:      "1000",
+		MaxAmount:      "50000",
+		Description:    "Sample charge",
+		InternalID:     "charge123",
+		CallbackURL:    "https://example.com/callback",
+		SuccessMessage: "Charge successful",
+	}
+	createdCharge, err := client.CreateStaticCharge(chargeOptions)
+	if err != nil {
+		t.Fatalf("Error creating static charge for testing: %v", err)
+	}
+
+	// Call the function being tested
+	response, err := client.GetStaticCharge(createdCharge.Data.ID)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error fetching static charge: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || response.Data.ID != createdCharge.Data.ID {
+		t.Errorf("Expected valid response with matching charge ID, got nil or mismatched ID")
+	}
+}
+
+func TestUpdateStaticCharge(t *testing.T) {
+
+	// Create a static charge to retrieve its ID for testing
+	chargeOptions := StaticChargeOptionsType{
+		MinAmount:      "1000",
+		MaxAmount:      "50000",
+		Description:    "Sample charge",
+		InternalID:     "charge123",
+		CallbackURL:    "https://example.com/callback",
+		SuccessMessage: "Charge successful",
+	}
+	createdCharge, err := client.CreateStaticCharge(chargeOptions)
+	if err != nil {
+		t.Fatalf("Error creating static charge for testing: %v", err)
+	}
+
+	// Update the static charge with new options
+	newChargeOptions := StaticChargeOptionsType{
+		MinAmount:      "2000",
+		MaxAmount:      "60000",
+		Description:    "Updated charge",
+		InternalID:     "charge456",
+		CallbackURL:    "https://example.com/update-callback",
+		SuccessMessage: "Updated charge successful",
+	}
+
+	// Call the function being tested
+	response, err := client.UpdateStaticCharge(createdCharge.Data.ID, newChargeOptions)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error updating static charge: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || response.Data.ID != createdCharge.Data.ID {
+		t.Errorf("Expected valid response with matching charge ID, got nil or mismatched ID")
+	}
+	if response.Data.MinAmount != newChargeOptions.MinAmount {
+		t.Errorf("Expected MinAmount to be updated, got %s", response.Data.MinAmount)
+	}
+	if response.Data.MaxAmount != newChargeOptions.MaxAmount {
+		t.Errorf("Expected MaxAmount to be updated, got %s", response.Data.MaxAmount)
+	}
+}
+
+func TestSendLightningAddressPayment(t *testing.T) {
+
+	// Create payment options
+	paymentOptions := SendLightningAddressPaymentOptionsType{
+		LnAddress:   "andre@zbd.gg",
+		Amount:      "1000",
+		Comment:     "Payment for goods",
+		CallbackUrl: "https://example.com/payment-callback",
+		InternalID:  "payment123",
+	}
+
+	// Call the function being tested
+	response, err := client.SendLightningAddressPayment(paymentOptions)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error sending lightning address payment: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || response.Data.ID == "" {
+		t.Errorf("Expected valid response with payment ID, got nil or empty ID")
+	}
+
+}
+
+func TestValidateLightningAddress(t *testing.T) {
+	// Test valid lightning address
+	validAddress := "andre@zbd.gg"
+	response, err := client.ValidateLightningAddress(validAddress)
+	if err != nil {
+		t.Errorf("Error validating valid LN address: %v", err)
+		return
+	}
+
+	if !response.Data.Valid {
+		t.Errorf("Expected valid LN address, got invalid")
+	}
+
+	// Test invalid lightning address
+	invalidAddress := "invalidlnaddress"
+	response, err = client.ValidateLightningAddress(invalidAddress)
+	if err != nil {
+		t.Errorf("Error validating invalid LN address: %v", err)
+		return
+	}
+
+	if response.Data.Valid {
+		t.Errorf("Expected invalid LN address, got valid")
+	}
+
+}
+
+func TestCreateChargeForLightningAddress(t *testing.T) {
+	// Define charge parameters
+	chargeParams := CreateChargeFromLightningAddressOptionsType{
+		Amount:      "10000",
+		LNAddress:   "lnaddress123",
+		Description: "Charge for LN address",
+	}
+
+	// Call the function being tested
+	response, err := client.CreateChargeForLightningAddress(chargeParams)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error creating charge for LN address: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || response.Data.LNAddress != chargeParams.LNAddress {
+		t.Errorf("Expected valid response with matching LNAddress, got nil or mismatched LNAddress")
+	}
+}
+
+func TestSendkeysendPayment(t *testing.T) {
+	keysendParams := KeysendOptionsType{
+		Amount:      "1000",
+		Pubkey:      "02abcd...",
+		TLVRecords:  "my-tlv-records",
+		Metadata:    "additional-metadata",
+		CallbackURL: "https://example.com/callback",
+	}
+
+	// Call the function being tested
+	response, err := client.SendKeysendPayment(keysendParams)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error sending keysend payment: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || response.Data.KeysendID == "" {
+		t.Errorf("Expected valid response with keysend ID, got nil or empty ID")
+	}
+	if response.Data.Transaction.Type != "keysend" {
+		t.Errorf("Expected transaction type to be 'keysend', got '%s'", response.Data.Transaction.Type)
+	}
+}
+
+func TestGetBtcUsdExchangeRate(t *testing.T) {
+	response, err := client.GetBTCUSDExchangeRate()
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error fetching BTC to USD exchange rate: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil {
+		t.Error("Expected non-nil response, got nil")
+		return
+	}
+
+	// You can add more assertions based on the structure of BTCUSDDataResponseType
+	fmt.Printf("BTC to USD exchange rate: %s\n", response.Data.BTCUSDPrice)
+	fmt.Printf("Exchange rate timestamp: %s\n", response.Data.BTCUSDTimestamp)
+
+}
+
+func TestIsSupportedRegion(t *testing.T) {
+	ipAddress := "127.0.0.1"
+	response, err := client.IsSupportedRegion(ipAddress)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error checking supported region: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil {
+		t.Errorf("Expected valid response with data, got nil")
+		return
+	}
+
+	// You can add more assertions based on the structure of SupportedRegionDataResponseType
+	if !response.Data.IsSupported {
+		t.Errorf("Expected supported region, got unsupported")
+	}
+}
+
+func TestGetZBDProdIps(t *testing.T) {
+	response, err := client.GetZBDProdIps()
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error fetching ZBD production IPs: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response == nil || len(response.Data.IPS) == 0 {
+		t.Errorf("Expected valid response with non-empty list of ZBD production IPs")
+	}
+}
+
+func TestInternalTransfer(t *testing.T) {
+	transferParams := InternalTransferOptionsType{
+		Amount:           "10000",
+		ReceiverWalletId: "b904ee02-ec0b-4fd4-b99f-1f2d3d0001a6",
+	}
+
+	// Perform the internal transfer
+	response, err := client.InternalTransfer(transferParams)
+	if err != nil {
+		// Check if the error message contains the expected string
+		expectedErrorMessage := "Error processing transfer."
+		if !strings.Contains(err.Error(), expectedErrorMessage) {
+			t.Errorf("Expected error message to contain \"%s\", got \"%s\"", expectedErrorMessage, err.Error())
+		}
+		return
+	}
+
+	// Check if the success message contains the expected string
+	expectedSuccessMessage := "was a good transfer but it shouldnt be"
+	if !strings.Contains(response.Message, expectedSuccessMessage) {
+		t.Errorf("Expected success message to contain \"%s\", got \"%s\"", expectedSuccessMessage, response.Message)
+	}
+}
+
+func TestCreateAuthUrl(t *testing.T) {
+	oauth := NewOauth("your_client_id", "your_secret", "your_redirect_uri", "your_state", "your_scope")
+	client := New("your_api_key", oauth)
+
+	authURL, err := client.CreateAuthUrl()
+	if err != nil {
+		t.Errorf("Error creating auth URL: %v", err)
+		return
+	}
+
+	// Perform any validation you need on the authURL here
+	if len(authURL) == 0 {
+		t.Errorf("Generated auth URL is empty")
+	}
+
+	t.Logf("Generated auth URL: %s", authURL)
+}
+
+func TestFetchToken(t *testing.T) {
+	oauth := NewOauth("your_client_id", "your_secret", "your_redirect_uri", "your_state", "your_scope")
+	client = New("edg7SOTFWbh1FbjVecbmZi4G4nYVHJj2", oauth)
+	client.BaseURL = "https://dev.zebedee.io/v0"
+	// Mock a successful response
+	Response := FetchAccessTokenRes{
+		AccessToken:           "your-access-token",
+		TokenType:             "bearer",
+		ExpiresIn:             3600,
+		RefreshToken:          "your-refresh-token",
+		RefreshTokenExpiresIn: 7200,
+		Scope:                 "your-scope",
+	}
+
+	// Call the function being tested
+	code := "your-authorization-code"
+	response, err := client.FetchToken(code)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error fetching access token: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response.AccessToken != Response.AccessToken {
+		t.Errorf("Expected access token '%s', but got '%s'", Response.AccessToken, response.AccessToken)
+	}
+}
+
+func TestRefreshToken(t *testing.T) {
+	oauth := NewOauth("your_client_id", "your_secret", "your_redirect_uri", "your_state", "your_scope")
+	client = New("edg7SOTFWbh1FbjVecbmZi4G4nYVHJj2", oauth)
+	client.BaseURL = "https://dev.zebedee.io/v0"
+
+	Response := FetchPostRes{
+		AccessToken:  "new-access-token",
+		TokenType:    "bearer",
+		ExpiresIn:    3600,
+		RefreshToken: "new-refresh-token",
+		Scope:        "your-scope",
+	}
+
+	// Call the function being tested
+	fakeRefreshToken := "xxx11xx1-xxxx-xxxx-xxx1-1xx11xx111xx"
+	response, err := client.FetchToken(fakeRefreshToken)
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error refreshing token: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if response.AccessToken != Response.AccessToken {
+		t.Errorf("Expected access token '%s', but got '%s'", Response.AccessToken, response.AccessToken)
+	}
+}
+
+func TestGetUserData(t *testing.T) {
+	Response := ZBDUserData{
+		ID:                 "user-id",
+		Email:              "user@example.com",
+		Gamertag:           "user123",
+		Image:              "user-avatar-url",
+		IsVerified:         true,
+		LightningAddress:   "lnaddress123",
+		PublicBio:          "User's public bio",
+		PublicStaticCharge: "staticcharge123",
+	}
+
+	userData, err := client.GetUserData("user-token-here")
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error fetching user data: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if userData.ID != Response.ID {
+		t.Errorf("Expected user ID '%s', but got '%s'", Response.ID, userData.ID)
+	}
+
+}
+
+func TestGetUserWalletData(t *testing.T) {
+	Response := ZBDUserWalletData{
+		Balance: "10000",
+		RemainingAmountLimits: ZBDUserWalletDataLimits{
+			Daily:     "5000",
+			MaxCredit: "20000",
+			Monthly:   "30000",
+			Weekly:    "10000",
+		},
+	}
+
+	walletData, err := client.GetUserWalletData("user-token-here")
+
+	// Check for errors
+	if err != nil {
+		t.Errorf("Error fetching user wallet data: %v", err)
+		return
+	}
+
+	// Assert the response contains expected data
+	if walletData.Balance != Response.Balance {
+		t.Errorf("Expected wallet balance '%s', but got '%s'", Response.Balance, walletData.Balance)
 	}
 }

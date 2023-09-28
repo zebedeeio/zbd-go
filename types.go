@@ -75,3 +75,262 @@ type PeerPayment struct {
 	Comment     string    `json:"comment"`
 	Status      string    `json:"status"`
 }
+
+type DecodeChargeOptionsType struct {
+	Invoice string `json:"invoice"`
+}
+
+type DecodeChargeResponseType struct {
+	Data struct {
+		Unit                   string `json:"unit"`
+		Status                 string `json:"status"`
+		Amount                 string `json:"amount"`
+		CreatedAt              string `json:"createdAt"`
+		InternalId             string `json:"internalId"`
+		CallbackUrl            string `json:"callbackUrl"`
+		Description            string `json:"description"`
+		InvoiceRequest         string `json:"invoiceRequest"`
+		InvoiceExpiresAt       string `json:"invoiceExpiresAt"`
+		InvoiceDescriptionHash string `json:"invoiceDescriptionHash,omitempty"`
+	} `json:"data"`
+	Success bool `json:"success"`
+}
+
+type StaticChargeOptionsType struct {
+	AllowedSlots   *string `json:"allowedSlots"`
+	MinAmount      string  `json:"minAmount"`
+	MaxAmount      string  `json:"maxAmount"`
+	Description    string  `json:"description"`
+	InternalID     string  `json:"internalId"`
+	CallbackURL    string  `json:"callbackUrl"`
+	SuccessMessage string  `json:"successMessage"`
+}
+
+type StaticChargeDataResponseType struct {
+	Data struct {
+		ID             string  `json:"id"`
+		Unit           string  `json:"unit"`
+		Slots          string  `json:"slots"`
+		MinAmount      string  `json:"minAmount"`
+		MaxAmount      string  `json:"maxAmount"`
+		CreatedAt      string  `json:"createdAt"`
+		CallbackURL    string  `json:"callbackUrl"`
+		InternalID     string  `json:"internalId"`
+		Description    string  `json:"description"`
+		ExpiresAt      string  `json:"expiresAt"`
+		ConfirmedAt    string  `json:"confirmedAt"`
+		SuccessMessage string  `json:"successMessage"`
+		AllowedSlots   *string `json:"allowedSlots"`
+		Status         string  `json:"status"`
+		Fee            string  `json:"fee"`
+		Invoice        struct {
+			Request string `json:"request"`
+			URI     string `json:"uri"`
+		} `json:"invoice"`
+	} `json:"data"`
+	Message string `json:"message"`
+}
+
+type SendLightningAddressPaymentOptionsType struct {
+	LnAddress   string `json:"lnAddress"`
+	Amount      string `json:"amount"`
+	Comment     string `json:"comment"`
+	CallbackUrl string `json:"callbackUrl"`
+	InternalID  string `json:"internalId"`
+}
+
+type SendLightningAddressPaymentDataResponseType struct {
+	Data struct {
+		ID            string `json:"id"`
+		Fee           string `json:"fee"`
+		Unit          string `json:"unit"`
+		Amount        string `json:"amount"`
+		Invoice       string `json:"invoice"`
+		Preimage      string `json:"preimage"`
+		WalletID      string `json:"walletId"`
+		TransactionID string `json:"transactionId"`
+		CallbackUrl   string `json:"callbackUrl"`
+		InternalID    string `json:"internalId"`
+		Comment       string `json:"comment"`
+		ProcessedAt   string `json:"processedAt"`
+		CreatedAt     string `json:"createdAt"`
+		Status        string `json:"status"`
+	} `json:"data"`
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
+type ValidateLightningAddressDataResponseType struct {
+	Data struct {
+		Valid    bool `json:"valid"`
+		Metadata struct {
+			MinSendable    int    `json:"minSendable"`
+			MaxSendable    int    `json:"maxSendable"`
+			CommentAllowed int    `json:"commentAllowed"`
+			Tag            string `json:"tag"`
+			Metadata       string `json:"metadata"`
+			Callback       string `json:"callback"`
+			PayerData      struct {
+				Name struct {
+					Mandatory bool `json:"mandatory"`
+				} `json:"name"`
+				Identifier struct {
+					Mandatory bool `json:"mandatory"`
+				} `json:"identifier"`
+			} `json:"payerData"`
+			Disposable bool `json:"disposable"`
+		} `json:"metadata"`
+	} `json:"data"`
+	Success bool `json:"success"`
+}
+
+type CreateChargeFromLightningAddressOptionsType struct {
+	Amount      string `json:"amount"`
+	LNAddress   string `json:"lnaddress"`
+	Description string `json:"description"`
+}
+
+type FetchChargeFromLightningAddressDataResponseType struct {
+	Data struct {
+		LNAddress string `json:"lnaddress"`
+		Amount    string `json:"amount"`
+		Invoice   struct {
+			URI     string `json:"uri"`
+			Request string `json:"request"`
+		} `json:"invoice"`
+	} `json:"data"`
+	Success bool `json:"success"`
+}
+
+type KeysendDataResponseType struct {
+	Data struct {
+		KeysendID   string `json:"keysendId"`
+		PaymentID   string `json:"paymentId"`
+		Transaction struct {
+			ID          string `json:"id"`
+			WalletID    string `json:"walletId"`
+			Type        string `json:"type"`
+			TotalAmount string `json:"totalAmount"`
+			Fee         string `json:"fee"`
+			Amount      string `json:"amount"`
+			Description string `json:"description"`
+			Status      string `json:"status"`
+			ConfirmedAt string `json:"confirmedAt"`
+		} `json:"transaction"`
+	} `json:"data"`
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+}
+
+type KeysendOptionsType struct {
+	Amount      string `json:"amount"`
+	Pubkey      string `json:"pubkey"`
+	TLVRecords  string `json:"tlvRecords"`
+	Metadata    string `json:"metadata"`
+	CallbackURL string `json:"callbackUrl"`
+}
+
+type BTCUSDDataResponseType struct {
+	Data struct {
+		BTCUSDPrice     string `json:"btcUsdPrice"`
+		BTCUSDTimestamp string `json:"btcUsdTimestamp"`
+	} `json:"data"`
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+}
+
+type SupportedRegionDataResponseType struct {
+	Data struct {
+		IPAddress   string `json:"ipAddress"`
+		IsSupported bool   `json:"isSupported"`
+		IPCountry   string `json:"ipCountry"`
+		IPRegion    string `json:"ipRegion"`
+	} `json:"data"`
+	Success bool `json:"success"`
+}
+
+type ProdIPSDataResponseType struct {
+	Data struct {
+		IPS []string `json:"ips"`
+	} `json:"data"`
+	Success bool `json:"success"`
+}
+
+type InternalTransferDataResponseType struct {
+	Data struct {
+		ID               string `json:"id"`
+		SenderWalletId   string `json:"senderWalletId"`
+		ReceivedWalletId string `json:"receivedWalletId"`
+		UserID           string `json:"userId"`
+		SendTxId         string `json:"sendTxId"`
+		ReceiveTxId      string `json:"receiveTxId"`
+		Status           string `json:"status"`
+		Amount           string `json:"amount"`
+		CreatedAt        string `json:"createdAt"`
+		UpdatedAt        string `json:"updatedAt"`
+	} `json:"data"`
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+}
+
+type InternalTransferOptionsType struct {
+	Amount           string `json:"amount"`
+	ReceiverWalletId string `json:"receiverWalletId"`
+}
+
+type FetchAccessTokenRes struct {
+	AccessToken           string `json:"accessToken"`
+	TokenType             string `json:"tokenType"`
+	ExpiresIn             uint32 `json:"expiresTn"`
+	RefreshToken          string `json:"refreshToken"`
+	RefreshTokenExpiresIn uint32 `json:"refreshTokenExpiresTn"`
+	Scope                 string `json:"scope"`
+}
+
+type FetchTokenBody struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	Code         string `json:"code"`
+	CodeVerifier string `json:"code_verifier"`
+	GrantType    string `json:"grant_type"`
+	RedirectURI  string `json:"redirect_uri"`
+}
+
+type FetchPostRes struct {
+	AccessToken  string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    uint32 `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
+	Scope        string `json:"scope"`
+}
+
+type FetchRefresh struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	RefreshToken string `json:"refresh_token"`
+	GrantType    string `json:"grant_type"`
+	RedirectURI  string `json:"redirect_uri"`
+}
+
+type ZBDUserData struct {
+	ID                 string `json:"id"`
+	Email              string `json:"email"`
+	Gamertag           string `json:"gamertag"`
+	Image              string `json:"image,omitempty"`
+	IsVerified         bool   `json:"isVerified"`
+	LightningAddress   string `json:"lightningAddress"`
+	PublicBio          string `json:"publicBio"`
+	PublicStaticCharge string `json:"publicStaticCharge"`
+}
+
+type ZBDUserWalletData struct {
+	Balance               string                  `json:"balance"`
+	RemainingAmountLimits ZBDUserWalletDataLimits `json:"remainingAmountLimits"`
+}
+
+type ZBDUserWalletDataLimits struct {
+	Daily     string `json:"daily"`
+	MaxCredit string `json:"maxCredit"`
+	Monthly   string `json:"monthly"`
+	Weekly    string `json:"weekly"`
+}
