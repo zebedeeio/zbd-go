@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	zbd := zebedee.New("API-KEY-GOES-HERE")
+	zbd := zebedee.New("API-KEY-GOES-HERE", nil)
 
 	// generate a charge
 	charge, _ := zbd.Charge(&zebedee.Charge{
