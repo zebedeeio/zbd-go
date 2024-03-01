@@ -1,0 +1,65 @@
+name: build and release
+
+on:
+  push:
+    branches:
+      - master
+      - ci/ramin/actions
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          args: --timeout 8m --verbose
+          version: v1.55
+          skip-pkg-cache: true
+          skip-build-cache: true
+
+  go_mod_tidy_check:
+    name: Mod Tidy Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+
+      - run: go mod tidy
+
+      - name: check for diff
+        run: git diff --exit-code
+
+  test:
+    needs: [lint, go_mod_tidy_check]
+    name: Unit tests
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+
+      - name: Run tests
+        run: go test -coverprofile=coverage.txt -covermode=atomic ./...
