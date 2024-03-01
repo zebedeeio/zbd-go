@@ -82,3 +82,6 @@ jobs:
 
       - name: Run e2e tests
         run: go test -v -tags=e2e ./...
+        env:
+          ZEBEDEE_API_KEY: ${{ secrets.ZBD_API_KEY }} # set this to run e2e tests
+
