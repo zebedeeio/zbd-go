@@ -50,7 +50,7 @@ jobs:
     name: Unit tests
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [ubuntu-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
 
