@@ -2,8 +2,13 @@
 
 package e2e
 
-import zebedee "github.com/zebedeeio/go-sdk"
+import (
+	"os"
+
+	zebedee "github.com/zebedeeio/go-sdk"
+)
 
 func NewClient() *zebedee.Client {
-	return zebedee.New("edg7SOTFWbh1FbjVecbmZi4G4nYVHJj2")
+	apiKey := os.Getenv("ZEBEDEE_API_KEY")
+	return zebedee.New(apiKey)
 }
