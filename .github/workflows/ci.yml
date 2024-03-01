@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - ci/ramin/actions
   pull_request:
     branches:
       - master
