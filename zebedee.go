@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -40,7 +40,10 @@ func (c *Client) MakeRequest(
 ) error {
 	body := &bytes.Buffer{}
 	if content != nil {
-		json.NewEncoder(body).Encode(content)
+		err := json.NewEncoder(body).Encode(content)
+		if err != nil {
+			return fmt.Errorf("fail to encode JSON: %w", err)
+		}
 	}
 
 	req, err := http.NewRequest(method, c.BaseURL+path, body)
@@ -57,7 +60,7 @@ func (c *Client) MakeRequest(
 	}
 	defer resp.Body.Close()
 
-	responseBody, _ := ioutil.ReadAll(resp.Body)
+	responseBody, _ := io.ReadAll(resp.Body)
 
 	var baseResponse Response
 	err = json.Unmarshal(responseBody, &baseResponse)
@@ -225,7 +228,7 @@ func (c *Client) CreateGamertagCharge(gamertag, amount, description string) (*Ch
 	}
 
 	return &Charge{
-		ExpiresIn:   int64(data.InvoiceExpiresAt.Sub(time.Now()).Seconds()),
+		ExpiresIn:   int64(data.InvoiceExpiresAt.Sub(time.Now()).Seconds()), //nolint:gosimple
 		Unit:        data.Unit,
 		Amount:      data.Amount,
 		Status:      readableStatus,

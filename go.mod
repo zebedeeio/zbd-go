@@ -1,3 +1,3 @@
 module github.com/zebedeeio/go-sdk
 
-go 1.15
+go 1.21

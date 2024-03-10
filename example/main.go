@@ -24,7 +24,7 @@ func main() {
 	charge, _ = zbd.GetCharge(charge.ID)
 	if charge.Status == "pending" {
 		fmt.Printf("payment still pending. expiring in %d seconds\n",
-			int64(charge.ExpiresAt.Sub(time.Now()).Seconds()))
+			int64(charge.ExpiresAt.Sub(time.Now()).Seconds())) //nolint:gosimple
 	}
 
 	// pay an invoice
